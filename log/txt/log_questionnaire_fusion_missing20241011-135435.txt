@@ -1,0 +1,7 @@
+date : 20241011-135435
+use_columns : P1, P7, P10
+weights : 1.0, 1.0, 1.0
+confusion matrix : 
+41 26 33
+21 18 15
+3 5 2

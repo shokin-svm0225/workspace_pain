@@ -1,0 +1,7 @@
+date : 20241102-182049
+use_columns : P2, P5, P7, P8
+weights : -1.0, 0.0, -2.0, -2.0
+confusion matrix : 
+76 24 0
+28 26 0
+8 2 0
