@@ -52,9 +52,9 @@ def show():
     st.write(f'あなたが選んだのは  {choice_3}  です。')
 
     if choice_1 == '欠損値データ削除' and choice_2 == 'PainDITECT' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/peindetect/questionnaire_paindetect_missing_侵害.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/peindetect/questionnaire_paindetect_missing_神経.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/peindetect/questionnaire_paindetect_missing_不明.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_侵害.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_神経.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_不明.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
