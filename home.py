@@ -30,19 +30,19 @@ def show():
     # 各タブに内容を追加
     with tab1:
         # CSVファイルのパスを指定
-        csv_file_path_5 = '/Users/iwasho_0225/Desktop/workspace/pain_experiment/質問表/painditect_質問.csv'  # ファイルパスを指定
+        csv_file_path_5 = '質問表/painditect_質問.csv'  # ファイルパスを指定
         df_paindetect = pd.read_csv(csv_file_path_5)
         # データフレームを表示
         st.dataframe(df_paindetect)
 
     with tab2:
         # CSVファイルのパスを指定
-        csv_file_path_6 = '/Users/iwasho_0225/Desktop/workspace/pain_experiment/質問表/bspop_質問.csv'  # ファイルパスを指定
+        csv_file_path_6 = '質問表/bspop_質問.csv'  # ファイルパスを指定
         df_bspop = pd.read_csv(csv_file_path_6)
         # データフレームを表示
         st.dataframe(df_bspop)
         # CSVファイルのパスを指定
-        csv_file_path_7 = '/Users/iwasho_0225/Desktop/workspace/pain_experiment/質問表/bspop_痛みの経過.csv'  # ファイルパスを指定
+        csv_file_path_7 = '質問表/bspop_痛みの経過.csv'  # ファイルパスを指定
         df_bspop_answer = pd.read_csv(csv_file_path_7)
         # データフレームを表示
         st.dataframe(df_bspop_answer)
