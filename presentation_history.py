@@ -33,21 +33,21 @@ def show():
         st.write("- FUSIONのデータセットで実行")
         st.write("- エクセル上でカラースケールを用いて可視化")
         st.write("- 重み付け：偏相関係数の高いカラムに1.5倍、低いカラムに0.5倍で実行")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/pain_exper.png')
+        img = Image.open('picture/pain_exper.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, caption='PainDETECT', use_container_width=True)
 
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/bspop_exper.png')
+        img = Image.open('picture/bspop_exper.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, caption='BS-POP', use_container_width=True)
 
         st.header("実験前")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/実験前_omomi.png')
+        img = Image.open('picture/実験前_omomi.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, use_container_width=True)
 
         st.header("実験後")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/実験後_omomi.png')
+        img = Image.open('picture/実験後_omomi.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, use_container_width=True)
         st.write("- 何度か実験を行ったが、実験前と変化は見られなかった")
