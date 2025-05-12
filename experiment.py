@@ -17,9 +17,10 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
+import joblib
 
 TEST_DATA_RATIO = 0.3
-SAVE_TRAINED_DATA_PATH = "svm_data.xml"
+MODEL_PATH = "svm_model.pkl"
 
 def show():
     st.title('疼痛診断システムの開発')
@@ -632,10 +633,8 @@ def show():
 
             for train_index, val_index in skf.split(datas, labels):
 
-                X_train = datas[train_index]
-                y_train = labels[train_index]
-                X_val = datas[val_index]
-                y_val = labels[val_index]
+                X_train, X_val = datas[train_index], datas[val_index]
+                y_train, y_val = labels[train_index], labels[val_index]
 
                 svm = cv2.ml.SVM_create()
                 svm.setType(cv2.ml.SVM_C_SVC)
@@ -658,14 +657,17 @@ def show():
             if avg_score > best_score:
                 best_score = avg_score
                 best_params = {"C": C}
+                best_model = svm
 
-            # モデルを保存
-            svm.save(SAVE_TRAINED_DATA_PATH)
+            # モデル保存
+            joblib.dump(best_model, MODEL_PATH)
 
         st.write("最適なパラメータ:", best_params)
         st.write("最高スコア:", best_score)
 
-        svm = cv2.ml.SVM_load(SAVE_TRAINED_DATA_PATH)
+        # モデル読み込み
+        svm = joblib.load(MODEL_PATH)
+        predicted = svm.predict(X_val)
         
         # confusion_matrix = np.zeros((3, 3), dtype=int)
         
