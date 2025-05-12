@@ -53,7 +53,7 @@ def show():
         st.write("- 何度か実験を行ったが、実験前と変化は見られなかった")
         st.write("- 極端に大きく、小さくしたが、変化は見られなかった（若干下がったかも）")
 
-    elif data_processing == "11月22日":
+    elif data_processing == "2024年11月22日":
         st.header("11月22日")
         st.write("- UIデザインの変更")
         st.write("--- 実験の重み付けの指定の部分を、縦ではなく横に出力するように変更")
@@ -192,7 +192,7 @@ def show():
         st.write("- 他の機械学習モデルでの実験")
         st.write("- streamlitのUIデザインの変更")
 
-    elif data_processing == "2025年1月24日":
+    elif data_processing == "2025年1月17日":
         st.title('発表内容')
         st.header("概要")
         st.write("- データの可視化")
