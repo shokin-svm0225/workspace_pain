@@ -13,6 +13,8 @@ from sklearn.preprocessing import StandardScaler
 import cv2
 import csv
 import datetime
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import confusion_matrix
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
@@ -367,7 +369,6 @@ def show():
     st.session_state.checkbox_states_1["P12"] = painDITECT_12
     st.session_state.checkbox_states_1["P13"] = painDITECT_13
 
-
     st.markdown('#### 使用するカラムの指定(BSPOP)')
 
     # 初期化
@@ -568,6 +569,16 @@ def show():
     st.markdown("#### 重みづけデータフレーム")
     st.dataframe(edited_df)
 
+    st.markdown('#### データの標準化')
+    # セレクトボックスのオプションを定義
+    options = ['する', 'しない']
+
+    # セレクトボックスを作成し、ユーザーの選択を取得
+    choice_4 = st.selectbox('データの標準化を行いますか？', options, index = None, placeholder="選択してください")
+
+    # ユーザーの選択に応じたメッセージを表示
+    st.write(f'あなたが選んだのは  {choice_4}  です。')
+
     #データの加工方法の指定
     options = ['欠損値削除', '中央値補完', '平均値補完', 'k-NN法補完']
 
@@ -578,25 +589,16 @@ def show():
         columns = edited_df["columns"].tolist()
         weights = edited_df["weights"].tolist()
         
-        # データの分割
-        df_nociceptive_train, df_nociceptive_test = train_test_split(
-            df1[columns], test_size=TEST_DATA_RATIO, random_state=None
-            )
-        df_neuronociceptive_train, df_neuronociceptive_test = train_test_split(
-            df2[columns], test_size=TEST_DATA_RATIO, random_state=None
-            )
-        df_unknown_train, df_unknown_test = train_test_split(
-            df3[columns], test_size=TEST_DATA_RATIO, random_state=None
-            )
+        # データの指定
+        df_nociceptive_train = df1[columns]
+        df_neuronociceptive_train = df2[columns]
+        df_unknown_train = df3[columns]
     
         # 重みを適用して特徴量を調整
         df_nociceptive_train_weighted = df_nociceptive_train.mul(weights, axis=1)
-
         df_neuronociceptive_train_weighted = df_neuronociceptive_train.mul(weights, axis=1)
-
         df_unknown_train_weighted = df_unknown_train.mul(weights, axis=1)
         
-    
         # トレーニングデータとラベルの作成
         datas = np.vstack(
             [
@@ -611,52 +613,51 @@ def show():
         labels3 = np.full(len(df_unknown_train_weighted), 3, np.int32)
         labels = np.concatenate([labels1, labels2, labels3]).astype(np.int32)
         
-        test_datas = np.vstack(
-            [
-            df_nociceptive_test.values,
-            df_neuronociceptive_test.values,
-            df_unknown_test.values,
-            ]
-            ).astype(np.float32)
-        
-        test_labels1 = np.full(len(df_nociceptive_test), 1, np.int32)
-        test_labels2 = np.full(len(df_neuronociceptive_test), 2, np.int32)
-        test_labels3 = np.full(len(df_unknown_test), 3, np.int32)
-        
-        test_labels = np.concatenate([test_labels1, test_labels2, test_labels3]).astype(
-            np.int32
-            )
-        
-        # パラメータの候補を設定
-        gamma_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]  # 0.1から100までの範囲、ステップ幅1
-        C_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000]
+        # 標準化の処理（必要に応じて）
+        if choice_4 == "する":
+            scaler = StandardScaler()
+            datas = scaler.fit_transform(datas)
 
+        # パラメータの候補を設定
+        # gamma_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000,10000] 
+        C_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000] # 0.0001から10000までの範囲、ステップ幅1
+        k = 5
         best_score = 0
         best_params = None
 
-        # 手動でグリッドサーチを実行(複数のリストの直積)
-        for gamma, C in itertools.product(gamma_values, C_values):
-            svm = cv2.ml.SVM_create()
-            svm.setType(cv2.ml.SVM_C_SVC)
-            svm.setKernel(cv2.ml.SVM_LINEAR)
-            svm.setGamma(gamma)
-            # svm.setcoef0(C)
-            svm.setC(C)
-            svm.setTermCriteria((cv2.TERM_CRITERIA_COUNT, 1500, 1.0e-06))
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
 
-            # トレーニング
-            svm.train(datas, cv2.ml.ROW_SAMPLE, labels)
+        for C in C_values:
+            scores = []
 
-            # テストデータで評価
-            _, predicted = svm.predict(test_datas)
-            score = np.sum(test_labels == predicted.flatten()) / len(test_labels)
+            for train_index, val_index in skf.split(datas, labels):
 
-            # ベストスコアの更新
-            if score > best_score:
-                best_score = score
-                best_params = {"gamma": gamma, "C": C}
+                X_train = datas[train_index]
+                y_train = labels[train_index]
+                X_val = datas[val_index]
+                y_val = labels[val_index]
 
-            st.write(f"Gamma: {gamma}, C: {C}, Score: {score:.4f}")
+                svm = cv2.ml.SVM_create()
+                svm.setType(cv2.ml.SVM_C_SVC)
+                svm.setKernel(cv2.ml.SVM_LINEAR)
+                svm.setC(C)
+                svm.setTermCriteria((cv2.TERM_CRITERIA_COUNT, 1500, 1.0e-06))
+
+                # トレーニング
+                svm.train(X_train, cv2.ml.ROW_SAMPLE, y_train)
+
+                # バリデーションデータで評価
+                _, predicted = svm.predict(X_val)
+                score = np.mean(y_val == predicted.flatten())
+                scores.append(score)
+
+            avg_score = np.mean(scores)
+
+            st.write(f"C: {C}, Score: {avg_score:.4f}")
+
+            if avg_score > best_score:
+                best_score = avg_score
+                best_params = {"C": C}
 
             # モデルを保存
             svm.save(SAVE_TRAINED_DATA_PATH)
@@ -664,41 +665,49 @@ def show():
         st.write("最適なパラメータ:", best_params)
         st.write("最高スコア:", best_score)
 
-
         svm = cv2.ml.SVM_load(SAVE_TRAINED_DATA_PATH)
         
-        confusion_matrix = np.zeros((3, 3), dtype=int)
+        # confusion_matrix = np.zeros((3, 3), dtype=int)
         
-        for i in range(len(test_labels)):
-            index1 = test_labels[i] - 1
-            index2 = predicted[i][0] - 1
-            confusion_matrix[int(index1)][int(index2)] += 1
+        # for i in range(len(test_labels)):
+        #     index1 = test_labels[i] - 1
+        #     index2 = predicted[i][0] - 1
+        #     confusion_matrix[int(index1)][int(index2)] += 1
             
-        st.write("confusion matrix")
-        st.table(confusion_matrix)
+        # st.write("confusion matrix")
+        # st.table(confusion_matrix)
 
-        score = np.sum(test_labels == predicted.flatten()) / len(test_labels)
+        # score = np.sum(test_labels == predicted.flatten()) / len(test_labels)
             
-        st.write("正答率:", score*100, "%")
+        # st.write("正答率:", score*100, "%")
             
         # 感度と特異度の計算
-        sensitivity = np.zeros(3)
-        specificity = np.zeros(3)
+        conf_matrix = confusion_matrix(y_val, predicted, labels=[1, 2, 3])
+
+        sensitivity_list = []
+        specificity_list = []
+
+        n_classes = conf_matrix.shape[0]
         
-        for i in range(3):
-            TP = confusion_matrix[i, i]
-            FN = np.sum(confusion_matrix[i, :]) - TP
-            FP = np.sum(confusion_matrix[:, i]) - TP
-            TN = np.sum(confusion_matrix) - (TP + FN + FP)
+        for i in range(n_classes):
+            TP = conf_matrix[i, i]
+            FN = np.sum(conf_matrix[i, :]) - TP
+            FP = np.sum(conf_matrix[:, i]) - TP
+            TN = np.sum(conf_matrix) - (TP + FN + FP)
             
-            sensitivity[i] = TP / (TP + FN) if (TP + FN) != 0 else 0
-            specificity[i] = TN / (TN + FP) if (TN + FP) != 0 else 0
+            sensitivity = TP / (TP + FN) if (TP + FN) != 0 else 0
+            specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
+
+            sensitivity_list.append(sensitivity)
+            specificity_list.append(specificity)
+
+            st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")
             
-        # 感度と特異度の表示
-        st.write("感度と特異度")
-        st.write("（疼痛1:侵害受容性疼痛,疼痛2:神経障害性疼痛,疼痛3:不明）")
-        for i in range(3):
-            st.write(f"疼痛 {i+1}: 感度 = {sensitivity[i]:.4f}, 特異度 = {specificity[i]:.4f}")
+        # # 感度と特異度の表示
+        # st.write("感度と特異度")
+        # st.write("（疼痛1:侵害受容性疼痛,疼痛2:神経障害性疼痛,疼痛3:不明）")
+        # for i in range(3):
+        #     st.write(f"疼痛 {i+1}: 感度 = {sensitivity[i]:.4f}, 特異度 = {specificity[i]:.4f}")
 
         # 現在の日時を取得
         dt_now = datetime.datetime.now()
@@ -712,9 +721,9 @@ def show():
             'data_processing': data_processing,
             'use_columns': ', '.join(map(str, columns)),
             'weights': ', '.join(map(str, weights)),
-            'score': str(score*100),
-            'sensitivity': ', '.join(map(str, [sensitivity[0],sensitivity[1],sensitivity[2]])),
-            'specificity': ', '.join(map(str, [specificity[0],specificity[1],specificity[2]]))
+            'score': str(best_score*100),
+            'sensitivity': ', '.join(f"{x:.4f}" for x in sensitivity_list),
+            'specificity': ', '.join(f"{x:.4f}" for x in specificity_list)
         }
 
         # CSVファイルに追記（既存のヘッダーを維持）
