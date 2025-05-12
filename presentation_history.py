@@ -66,7 +66,7 @@ def show():
         st.write("- 相関係数の計算に用いたデータ：２つの質問表を組み合わせたもの")
         st.write("- 痛みの種類：侵害T = 0 , 神経T = 1 , 不明T = 2")
         st.markdown('#### 相関係数')
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/coeff_pain.png')
+        img = Image.open('picture/11:22/coeff_pain.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, use_container_width=True)
         st.write("- 比較的に高い相関が見られなかった")
@@ -76,16 +76,16 @@ def show():
         st.write("- 相関係数の高いカラムに1.5倍、低いカラムに0.5倍で実行")
         st.write("- 1.5倍：P8,P12")
         st.write("- 0.5倍：P9,D10,D14,D15,D17")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_weight_null.png')
+        img = Image.open('picture/11:22/11_22_weight_null.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="欠損値削除" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_weight_median.png')
+        img = Image.open('picture/11:22/11_22_weight_median.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="中央値補完" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_weight_mean.png')
+        img = Image.open('picture/11:22/11_22_weight_mean.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="平均値補完" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_weight_knn.png')
+        img = Image.open('picture/11:22/11_22_weight_knn.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="k-NN法補完" , use_container_width=True)
         st.write("結果・考察")
@@ -96,16 +96,16 @@ def show():
         st.write("- 使用するカラム：P8,P9,P12,D10,D14,D15,D17")
         st.write("- 重み付けは、上記と同様に行う")
         st.write("- 0.5倍：P9,D10,D14,D15,D17")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_select_null.png')
+        img = Image.open('picture/11:22/11_22_select_null.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="欠損値削除" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_select_median.png')
+        img = Image.open('picture/11:22/11_22_select_median.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="中央値補完" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_select_mean.png')
+        img = Image.open('picture/11:22/11_22_select_mean.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="平均値補完" , use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/11:22/11_22_select_knn.png')
+        img = Image.open('picture/11:22/11_22_select_knn.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img,caption="k-NN法補完" , use_container_width=True)
         st.write("結果・考察")
@@ -169,7 +169,7 @@ def show():
         st.write("--- モデル性能の評価は行ったが、ハイパーパラメータのチューニングはできるのか？")
         st.write("- グリッドサーチ")
         st.write("--- 指定された範囲の中で、すべての組み合わせを総当たりで探索して最適なパラメータを設定する手法")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/12:13/1213_svm_parameter.png')
+        img = Image.open('picture/12:13/1213_svm_parameter.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, use_container_width=True)
         st.write("--- svm.setKernel(cv2.ml.SVM_LINEAR)：カーネル関数の種類を表す")
@@ -206,25 +206,25 @@ def show():
         st.header("データの可視化")
         st.write("- 目的変数(痛みの種類)の分布")
         st.write("-- 侵害T = 1 , 神経T = 2 , 不明T = 3")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/typeofpain.png')
+        img = Image.open('picture/typeofpain.png')
         st.image(img, use_container_width=True)
         st.write("分布が大きく偏っていて、不均衡データの可能性がある")
         st.write("機械学習を扱う際の評価指標の選び方に注意する必要がる")
 
         st.write("- 侵害受容性疼痛と診断されたデータの各質問項目における点数ごとの合計人数の分布")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/侵害受容性疼痛_可視化.png')
+        img = Image.open('picture/侵害受容性疼痛_可視化.png')
         st.image(img, use_container_width=True)
         st.write("P8,P12は0.0に近い点数に合計人数が集まっている傾向があり、診断に影響してそう → 重み付けを高く")
         st.write("D8は他の疼痛と比べて点数の合計人数が均衡している → 重み付けを低く")
 
         st.write("- 神経障害性疼痛と診断されたデータの各質問項目における点数ごとの合計人数の分布")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/神経障害性疼痛_可視化.png')
+        img = Image.open('picture/神経障害性疼痛_可視化.png')
         st.image(img, use_container_width=True)
         st.write("P8,P12は他の疼痛と比べて点数の合計人数が均衡している → 重み付けを低く")
         st.write("D8は1.0の点数の合計人数が他の点数より圧倒的に高く、診断に影響してそう → 重み付けを高く")
 
         st.write("- 不明と診断されたデータの各質問項目における点数ごとの合計人数の分布")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/不明_可視化.png')
+        img = Image.open('picture/不明_可視化.png')
         st.image(img, use_container_width=True)
         st.write("P4は1.0の点数が圧倒的に高く、診断に影響してそう → 重み付けを高く")
         st.write("P8,P12は0.0に近い点数に合計人数が集まっている傾向があり、診断に影響してそう → 重み付けを高く")
@@ -244,7 +244,7 @@ def show():
         st.write("- 標準化したのに精度が下がったのは何故か？")
 
         st.header("ハイパーパラメータ(C)のチューニング")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/12:13/1213_svm_parameter.png')
+        img = Image.open('picture/12:13/1213_svm_parameter.png')
         # use_column_width 実際のレイアウトの横幅に合わせるか
         st.image(img, use_container_width=True)
         st.write("--- svm.setKernel(cv2.ml.SVM_LINEAR)：カーネル関数の種類を表す")
@@ -293,7 +293,7 @@ def show():
         st.code(body_4, language="python")
 
         st.header("カーネルでの実験")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/12:13/1213_svm_parameter.png')
+        img = Image.open('picture/12:13/1213_svm_parameter.png')
         st.image(img, use_container_width=True)
         st.write("--- svm.setKernel(cv2.ml.SVM_LINEAR)：カーネル関数の種類を表す")
         st.write("- svm.setKernel(cv2.ml.SVM_LINEAR)：線形カーネル")
@@ -385,17 +385,17 @@ def show():
 
         st.header("実験結果")
         st.write("- 実験1（重み付け：全特徴量 * 1.0）")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/実験1.png')
+        img = Image.open('picture/実験1.png')
         st.image(img, caption='実験1', use_container_width=True)
         st.write("- 実験2（重み付け：D1,D2,D7,D8,D9,D11,D13,D14,D17：* 1.5、D6,D10,D18：* 0.5、その他：* 1.0）")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/実験2.png')
+        img = Image.open('picture/実験2.png')
         st.image(img, caption='実験2', use_container_width=True)
         st.write("- 結果を可視化してみる")
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/質問表ごとの正答率.png')
+        img = Image.open('picture/質問表ごとの正答率.png')
         st.image(img, caption='質問表ごとの正答率', use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/欠損値補完ごとの正答率.png')
+        img = Image.open('picture/欠損値補完ごとの正答率.png')
         st.image(img, caption='欠損値補完ごとの正答率', use_container_width=True)
-        img = Image.open('/Users/iwasho_0225/Desktop/workspace/pain_experiment/picture/標準化の有無ごとの正答率.png')
+        img = Image.open('picture/標準化の有無ごとの正答率.png')
         st.image(img, caption='標準化の有無ごとの正答率', use_container_width=True)
 
         st.header("考察")
