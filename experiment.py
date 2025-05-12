@@ -74,9 +74,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'FUSION' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/fusion/questionnaire_fusion_missing_侵害.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/fusion/questionnaire_fusion_missing_神経.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/null/fusion/questionnaire_fusion_missing_不明.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_侵害.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_神経.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_不明.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -85,9 +85,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'PainDITECT' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_median_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_median_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_median_不明_paindetect.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_不明_paindetect.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -96,9 +96,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'BS-POP' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_median_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_median_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_median_不明_bspop.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_median_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_median_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_median_不明_bspop.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -107,9 +107,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'FUSION' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_median_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_median_不明.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_median_神経障害性疼痛.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_median_不明.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -118,9 +118,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'PainDITECT' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_mean_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_mean_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_mean_不明_paindetect.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_不明_paindetect.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -129,9 +129,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'BS-POP' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_mean_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_mean_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_mean_不明_bspop.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_不明_bspop.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -140,9 +140,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'FUSION' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_mean_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_mean_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_mean_不明.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_mean_侵害受容性疼痛.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_mean_神経障害性疼痛.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_mean_不明.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -151,9 +151,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'PainDITECT' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_KNN_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_KNN_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/PAINDITECT/det_KNN_不明_paindetect.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_不明_paindetect.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -162,9 +162,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'BS-POP' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_KNN_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_KNN_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/BSPOP/det_KNN_不明_bspop.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_不明_bspop.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -173,9 +173,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'FUSION' and choice_3 == '無':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_KNN_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_KNN_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/欠損値補完/FUSION/det_KNN_不明.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_侵害受容性疼痛.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_神経障害性疼痛.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_不明.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -184,9 +184,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'PainDITECT' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/NULL/侵害受容性疼痛_filtered_data_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/NULL/神経障害性疼痛_filtered_data_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/NULL/不明_filtered_data_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/painDETECT/NULL/侵害受容性疼痛_filtered_data_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/painDETECT/NULL/神経障害性疼痛_filtered_data_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/painDETECT/NULL/不明_filtered_data_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -195,9 +195,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'BS-POP' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_精神障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_精神障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/BS-POP/NULL/questionnaire_bspop_missing_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -206,9 +206,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'FUSION' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/FUSION/NULL/questionnaire_fusion_missing_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -217,9 +217,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'PainDITECT' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/median/det_painditect_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/median/det_painditect_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/median/det_painditect_median_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/painDETECT/median/det_painditect_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/painDETECT/median/det_painditect_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/painDETECT/median/det_painditect_median_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -228,9 +228,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'BS-POP' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/median/det_bspop_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/median/det_bspop_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/median/det_bspop_median_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/BS-POP/median/det_bspop_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/BS-POP/median/det_bspop_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/BS-POP/median/det_bspop_median_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -239,9 +239,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '中央値補完' and choice_2 == 'FUSION' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/median/det_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/median/det_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/median/det_median_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/FUSION/median/det_median_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/FUSION/median/det_median_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/FUSION/median/det_median_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -250,9 +250,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'PainDITECT' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/mean/det_painditect_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/mean/det_painditect_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/mean/det_painditect_mean_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/painDETECT/mean/det_painditect_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/painDETECT/mean/det_painditect_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/painDETECT/mean/det_painditect_mean_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -261,9 +261,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'BS-POP' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/mean/det_bspop_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/mean/det_bspop_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/mean/det_bspop_mean_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/BS-POP/mean/det_bspop_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/BS-POP/mean/det_bspop_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/BS-POP/mean/det_bspop_mean_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -272,9 +272,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == '平均値補完' and choice_2 == 'FUSION' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/mean/det_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/mean/det_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/mean/det_mean_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/FUSION/mean/det_mean_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/FUSION/mean/det_mean_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/FUSION/mean/det_mean_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -283,9 +283,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'PainDITECT' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/knn/det_painditect_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/knn/det_painditect_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/painDETECT/knn/det_painditect_KNN_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/painDETECT/knn/det_painditect_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/painDETECT/knn/det_painditect_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/painDETECT/knn/det_painditect_KNN_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -294,9 +294,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'BS-POP' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/knn/det_bspop_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/knn/det_bspop_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/BS-POP/knn/det_bspop_KNN_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/BS-POP/knn/det_bspop_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/BS-POP/knn/det_bspop_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/BS-POP/knn/det_bspop_KNN_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -305,9 +305,9 @@ def show():
         st.dataframe(df3)
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'FUSION' and choice_3 == '有':
-        df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/knn/det_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/knn/det_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/特徴量拡大/FUSION/knn/det_KNN_不明_newroc.csv', encoding = 'utf-8')
+        df1 = pd.read_csv('data2/特徴量拡大/FUSION/knn/det_KNN_侵害受容性疼痛_newroc.csv', encoding = 'utf-8')
+        df2 = pd.read_csv('data2/特徴量拡大/FUSION/knn/det_KNN_神経障害性疼痛_newroc.csv', encoding = 'utf-8')
+        df3 = pd.read_csv('data2/特徴量拡大/FUSION/knn/det_KNN_不明_newroc.csv', encoding = 'utf-8')
         st.markdown('#### 侵害受容性疼痛')
         st.dataframe(df1)
         st.markdown('#### 神経障害性疼痛')
@@ -704,7 +704,7 @@ def show():
         dt_now = datetime.datetime.now()
 
         # アップロードしたCSVファイルのパス
-        LOG_FILE_PATH = '/Users/iwasho_0225/Desktop/workspace/pain_experiment/log/LOG_FILE.csv'
+        LOG_FILE_PATH = 'log/LOG_FILE.csv'
 
         # 新しいデータを1行にまとめる
         new_row = {
