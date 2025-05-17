@@ -16,7 +16,10 @@ import datetime
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
-def show():
+# ラジオボタンを表示
+home_type = st.sidebar.radio("選んでください", ["研究概要", "辞書"])
+
+if home_type == "研究概要":
     st.title('ホーム')
     st.header("研究内容")
     st.write("AIモデルの一つであるSVMを用い、整形外科での診断補助システム開発を行う")
@@ -86,3 +89,6 @@ def show():
     st.write("- 20241102 : 今まで利用したCSVファイルのカラムを統一にしました")
     st.write("- 20241106 : 各質問項目における相関係数の出力をしました")
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
+
+elif home_type == "辞書":
+    st.write("デフォルトの質問項目に新たな質問項目(特徴量)を作成")
