@@ -5,48 +5,46 @@ import pandas as pd
 import numpy as np
 import altair as alt
 from PIL import Image
-from sklearn.model_selection import train_test_split
-from sklearn.svm import LinearSVC
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-import cv2
-import csv
-import datetime
-from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
-def show():
-    st.title('疼痛のデータセットの表示')
-    st.markdown('#### 侵害受容性疼痛')
-    # ファイルアップローダーの準備
-    uploaded_file = st.file_uploader("CSVファイルのアップロード", type="csv", key="unique_key_1")
-    
-    # uploadファイルが存在するときだけ、csvファイルの読み込み
-    if uploaded_file :
-        df1 = pd.read_csv(uploaded_file, encoding = 'utf-8')
+st.title('データセットの表示')
 
-        st.markdown('#### データセット')
-        st.dataframe(df1)
+# ラジオボタンを表示
+home_type = st.sidebar.radio("選んでください", ["生データ", "欠損値削除", "中央値補完", "平均値補完", "k-NN法補完"])
 
-    st.markdown('#### 神経障害性疼痛')
-    # ファイルアップローダーの準備
-    uploaded_file = st.file_uploader("CSVファイルのアップロード", type="csv", key="unique_key_2")
-    
-    # uploadファイルが存在するときだけ、csvファイルの読み込み
-    if uploaded_file :
-        df2 = pd.read_csv(uploaded_file, encoding = 'utf-8')
+if home_type == "生データ":
+    st.markdown('#### 生データ')
+    df1 = pd.read_csv("data2/data_main/MedicalData_columns_change.csv", encoding = 'utf-8')
+    st.dataframe(df1)
 
-        st.markdown('#### データセット')
-        st.dataframe(df2)
+if home_type == "欠損値削除":
+    st.markdown('#### 欠損値削除')
+    df2 = pd.read_csv("data/null/fusion/questionnaire_fusion_missing.csv", encoding = 'utf-8')
+    st.dataframe(df2)
 
-    st.markdown('#### 原因不明')
-    # ファイルアップローダーの準備
-    uploaded_file = st.file_uploader("CSVファイルのアップロード", type="csv", key="unique_key_3")
-    
-    # uploadファイルが存在するときだけ、csvファイルの読み込み
-    if uploaded_file :
-        df3 = pd.read_csv(uploaded_file, encoding = 'utf-8')
+if home_type == "中央値補完":
+    st.markdown('#### 中央値補完')
+    df3 = pd.read_csv("data/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv", encoding = 'utf-8')
+    df4 = pd.read_csv("data/欠損値補完/FUSION/det_median_神経障害性疼痛.csv", encoding = 'utf-8')
+    df5 = pd.read_csv("data/欠損値補完/FUSION/det_median_不明.csv", encoding = 'utf-8')
+    st.dataframe(df3)
+    st.dataframe(df4)
+    st.dataframe(df5)
 
-        st.markdown('#### データセット')
-        st.dataframe(df3)
+if home_type == "平均値補完":
+    st.markdown('#### 平均値補完')
+    df6 = pd.read_csv("data/欠損値補完/FUSION/det_mean_侵害受容性疼痛.csv", encoding = 'utf-8')
+    df7 = pd.read_csv("data/欠損値補完/FUSION/det_mean_神経障害性疼痛.csv", encoding = 'utf-8')
+    df8 = pd.read_csv("data/欠損値補完/FUSION/det_mean_不明.csv", encoding = 'utf-8')
+    st.dataframe(df6)
+    st.dataframe(df7)
+    st.dataframe(df8)
+
+if home_type == "k-NN法補完":
+    st.markdown('#### k-NN法補完')
+    df9 = pd.read_csv("data/欠損値補完/FUSION/det_KNN_侵害受容性疼痛.csv", encoding = 'utf-8')
+    df10 = pd.read_csv("data/欠損値補完/FUSION/det_KNN_神経障害性疼痛.csv", encoding = 'utf-8')
+    df11 = pd.read_csv("data/欠損値補完/FUSION/det_KNN_不明.csv", encoding = 'utf-8')
+    st.dataframe(df9)
+    st.dataframe(df10)
+    st.dataframe(df11)
