@@ -16,22 +16,21 @@ import datetime
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
-def show():
-    st.title('質問表を表示')
-    st.markdown('#### PainDETECT')
-    img = Image.open('質問表/painditect.png')
-    # use_column_width 実際のレイアウトの横幅に合わせるか
-    st.image(img, caption='参考文献：https://gunma-pt.com/wp-content/uploads/2015/03/paindetect.pdf', use_container_width=True)
+st.title('質問表を表示')
+st.markdown('#### PainDETECT')
+img = Image.open('質問表/painditect.png')
+# use_column_width 実際のレイアウトの横幅に合わせるか
+st.image(img, caption='参考文献：https://gunma-pt.com/wp-content/uploads/2015/03/paindetect.pdf', use_container_width=True)
 
-    img = Image.open('質問表/painDETECT-Q.png')
-    # use_column_width 実際のレイアウトの横幅に合わせるか
-    st.image(img, caption='参考文献：https://www.researchgate.net/figure/The-painDETECT-Questionnaire-Japanese-version-PDQ-J-doi_fig3_257465057', use_container_width=True)
+img = Image.open('質問表/painDETECT-Q.png')
+# use_column_width 実際のレイアウトの横幅に合わせるか
+st.image(img, caption='参考文献：https://www.researchgate.net/figure/The-painDETECT-Questionnaire-Japanese-version-PDQ-J-doi_fig3_257465057', use_container_width=True)
 
-    st.markdown('#### BS-POP')
-    img = Image.open('質問表/bspop_医師.png')
-    # use_column_width 実際のレイアウトの横幅に合わせるか
-    st.image(img, use_container_width=True)
+st.markdown('#### BS-POP')
+img = Image.open('質問表/bspop_医師.png')
+# use_column_width 実際のレイアウトの横幅に合わせるか
+st.image(img, use_container_width=True)
 
-    img = Image.open('質問表/bspop_患者.png')
-    # use_column_width 実際のレイアウトの横幅に合わせるか
-    st.image(img, caption='参考文献：http://www.onitaiji.com/spine/evaluation/0.pdf', use_container_width=True)
+img = Image.open('質問表/bspop_患者.png')
+# use_column_width 実際のレイアウトの横幅に合わせるか
+st.image(img, caption='参考文献：http://www.onitaiji.com/spine/evaluation/0.pdf', use_container_width=True)
