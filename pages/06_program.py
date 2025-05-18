@@ -5,20 +5,15 @@ import pandas as pd
 import numpy as np
 import altair as alt
 from PIL import Image
-from sklearn.model_selection import train_test_split
-from sklearn.svm import LinearSVC
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
-import cv2
-import csv
-import datetime
-from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
-def show():
-    st.title('データ加工・機械学習のプログラムを表示')
-    st.header('欠損値補完')
+st.title('データ加工・機械学習のプログラムを表示')
+
+# ラジオボタンを表示
+home_type = st.sidebar.radio("選んでください", ["欠損値補完", "特徴量拡大", "SVM(cv2)", "SVM(scikit-learn)", "標準化", "交差検証", "感度と特異度の計算"])
+
+if home_type == "欠損値補完":
+    st.subheader('欠損値補完')
     body_1 = """
     import pandas as pd
     from sklearn.impute import KNNImputer
@@ -94,7 +89,8 @@ def show():
     """
     st.code(body_1, language="python")
 
-    st.header('特徴量増量')
+if home_type == "特徴量拡大":
+    st.subheader('特徴量拡大')
     body_2 = """
     import pandas as pd
 
@@ -142,48 +138,12 @@ def show():
         df.to_csv(output_csv_file_path, index=False)
     """
     st.code(body_2, language="python")
-    
-    st.header('svm実装')
+
+if home_type == "SVM(cv2)":
+    st.header('SVM(cv2)')
     body_3 = """
-    TEST_DATA_RATIO = 0.3
-    SAVE_TRAINED_DATA_PATH = "svm_data.xml"
+    import cv2
 
-    # csvファイルの読み込み
-    df = pd.read_csv(uploaded_file, encoding = 'utf-8')
-
-    # カラムと重みの値を取得
-    columns = df["columns"].tolist()
-    weights = df["weights"].tolist()
-    
-    # データの分割
-    df_nociceptive_train, df_nociceptive_test = train_test_split(
-        df1[columns], test_size=TEST_DATA_RATIO, random_state=None
-        )
-    df_neuronociceptive_train, df_neuronociceptive_test = train_test_split(
-        df2[columns], test_size=TEST_DATA_RATIO, random_state=None
-        )
-    df_unknown_train, df_unknown_test = train_test_split(
-        df3[columns], test_size=TEST_DATA_RATIO, random_state=None
-        )
-
-    # 重みを適用して特徴量を調整（訓練データの場合）
-    df_nociceptive_train_weighted = df_nociceptive_train.mul(weights, axis=1)
-    df_nociceptive_test_weighted = df_nociceptive_test.mul(weights, axis=1)
-
-    # トレーニングデータとラベルの作成
-    datas = np.vstack(
-        [
-            df_nociceptive_train.values,
-            df_neuronociceptive_train.values,
-            df_unknown_train.values,
-            ]
-            ).astype(np.float32)
-    
-    labels1 = np.full(len(df_nociceptive_train), 1, np.int32)
-    labels2 = np.full(len(df_neuronociceptive_train), 2, np.int32)
-    labels3 = np.full(len(df_unknown_train), 3, np.int32)
-    labels = np.concatenate([labels1, labels2, labels3]).astype(np.int32)
-    
     # SVMモデルの作成とトレーニング
     svm = cv2.ml.SVM_create()
     svm.setType(cv2.ml.SVM_C_SVC)
@@ -196,66 +156,90 @@ def show():
     # モデルを保存
     svm.save(SAVE_TRAINED_DATA_PATH)
     
-    test_datas = np.vstack(
-        [
-        df_nociceptive_test.values,
-        df_neuronociceptive_test.values,
-        df_unknown_test.values,
-        ]
-        ).astype(np.float32)
-    
-    test_labels1 = np.full(len(df_nociceptive_test), 1, np.int32)
-    test_labels2 = np.full(len(df_neuronociceptive_test), 2, np.int32)
-    test_labels3 = np.full(len(df_unknown_test), 3, np.int32)
-    
-    test_labels = np.concatenate([test_labels1, test_labels2, test_labels3]).astype(
-        np.int32
-        )
-    
-    # # データの標準化
-    # scaler = StandardScaler()
-    # datas = scaler.fit_transform(datas)
-    # test_datas = scaler.transform(test_datas)
-    
-    # # 交差検証の実行
-    # cross_val_scores = cross_val_score(svm, datas, labels, cv=5)
-    # print("Cross-Validation Scores:", cross_val_scores)
-    # print("Mean Cross-Validation Score:", cross_val_scores.mean())
-    
     svm = cv2.ml.SVM_load(SAVE_TRAINED_DATA_PATH)
     _, predicted = svm.predict(test_datas)
-    
-    confusion_matrix = np.zeros((3, 3), dtype=int)
-    
-    for i in range(len(test_labels)):
-        index1 = test_labels[i] - 1
-        index2 = predicted[i][0] - 1
-        confusion_matrix[int(index1)][int(index2)] += 1
-        
-    st.write("confusion matrix")
-    st.table(confusion_matrix)
-
-    score = np.sum(test_labels == predicted.flatten()) / len(test_labels)
-        
-    st.write("正答率:", score*100, "%")
-        
-    # 感度と特異度の計算
-    sensitivity = np.zeros(3)
-    specificity = np.zeros(3)
-    
-    for i in range(3):
-        TP = confusion_matrix[i, i]
-        FN = np.sum(confusion_matrix[i, :]) - TP
-        FP = np.sum(confusion_matrix[:, i]) - TP
-        TN = np.sum(confusion_matrix) - (TP + FN + FP)
-        
-        sensitivity[i] = TP / (TP + FN) if (TP + FN) != 0 else 0
-        specificity[i] = TN / (TN + FP) if (TN + FP) != 0 else 0
-        
-    # 感度と特異度の表示
-    st.write("感度と特異度")
-    st.write("（疼痛1:侵害受容性疼痛,疼痛2:神経障害性疼痛,疼痛3:不明）")
-    for i in range(3):
-        st.write(f"疼痛 {i+1}: 感度 = {sensitivity[i]:.4f}, 特異度 = {specificity[i]:.4f}")
     """
     st.code(body_3, language="python")
+
+if home_type == "SVM(scikit-learn)":
+    st.header('SVM(scikit-learn)')
+    body_4 = """
+    from sklearn.svm import SVC
+    import joblib
+
+    svm = SVC(C=C, kernel='linear', max_iter=1500)
+    svm.fit(X_train, y_train)# トレーニング
+
+    # バリデーションデータで評価
+    predicted = svm.predict(X_val)
+    score = np.mean(y_val == predicted)
+    scores.append(score)
+
+    # モデル保存
+    joblib.dump(best_model, MODEL_PATH)
+    """
+    st.code(body_4, language="python")
+
+if home_type == "SVM(scikit-learn)":
+    st.header('標準化')
+    body_5 = """
+        from sklearn.preprocessing import StandardScaler
+
+        scaler = StandardScaler()
+        datas = scaler.fit_transform(datas)
+            """
+    st.code(body_5, language="python")
+
+if home_type == "交差検証":
+    st.header('交差検証')
+    body_6 = """
+    from sklearn.model_selection import StratifiedKFold
+
+    k = 5
+    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
+
+    for train_index, val_index in skf.split(datas, labels):
+
+        X_train, X_val = datas[train_index], datas[val_index]
+        y_train, y_val = labels[train_index], labels[val_index]
+
+        svm = SVC(C=C, kernel='linear', max_iter=1500)
+        svm.fit(X_train, y_train)# トレーニング
+
+        # バリデーションデータで評価
+        predicted = svm.predict(X_val)
+        score = np.mean(y_val == predicted)
+        scores.append(score)
+
+    avg_score = np.mean(scores)
+    st.write(f"C: {C}, Score: {avg_score:.4f}")
+    """
+    st.code(body_6, language="python")
+
+if home_type == "感度と特異度の計算":
+    st.header('感度と特異度の計算')
+    body_7 = """
+    from sklearn.metrics import confusion_matrix
+    
+    conf_matrix = confusion_matrix(y_val, predicted, labels=[1, 2, 3])
+
+    sensitivity_list = []
+    specificity_list = []
+
+    n_classes = conf_matrix.shape[0]
+    
+    for i in range(n_classes):
+        TP = conf_matrix[i, i]
+        FN = np.sum(conf_matrix[i, :]) - TP
+        FP = np.sum(conf_matrix[:, i]) - TP
+        TN = np.sum(conf_matrix) - (TP + FN + FP)
+        
+        sensitivity = TP / (TP + FN) if (TP + FN) != 0 else 0
+        specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
+
+        sensitivity_list.append(sensitivity)
+        specificity_list.append(specificity)
+
+        st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")
+    """
+    st.code(body_7, language="python")
