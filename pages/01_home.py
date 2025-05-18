@@ -93,6 +93,13 @@ if home_type == "研究概要":
 elif home_type == "辞書":
     st.subheader('k-NN法', divider='rainbow')
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
+    st.subheader('scikit-learn', divider='rainbow')
+    st.markdown("""Python で利用できるデータ分析や機械学習のためのライブラリの一つ
+                - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
+                  - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
+                - 非常に充実したドキュメンテーションがある
+                  - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html/): scikit-learnのドキュメント参考")
+                """)
 
 elif home_type == "自己紹介":
     st.subheader('自己紹介(2025年4月11日)', divider='rainbow')
