@@ -180,7 +180,7 @@ if home_type == "SVM(scikit-learn)":
     """
     st.code(body_4, language="python")
 
-if home_type == "SVM(scikit-learn)":
+if home_type == "標準化":
     st.header('標準化')
     body_5 = """
         from sklearn.preprocessing import StandardScaler
@@ -220,7 +220,7 @@ if home_type == "感度と特異度の計算":
     st.header('感度と特異度の計算')
     body_7 = """
     from sklearn.metrics import confusion_matrix
-    
+
     conf_matrix = confusion_matrix(y_val, predicted, labels=[1, 2, 3])
 
     sensitivity_list = []
