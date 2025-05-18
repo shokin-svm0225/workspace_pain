@@ -17,7 +17,7 @@ data_processing = st.sidebar.selectbox('日程を選択してください', opti
 
 # 選択されたオプションに応じた処理
 if data_processing == "2024年11月8日":
-    st.header("11月8日")
+    st.subheader('2024年11月8日', divider='rainbow')
     st.write("データから偏相関係数を求め、重み付けを行いました")
     st.write("- 訓練データ：70%,テストデータ：30%")
     st.write("- FUSIONのデータセットで実行")
@@ -44,7 +44,7 @@ if data_processing == "2024年11月8日":
     st.write("- 極端に大きく、小さくしたが、変化は見られなかった（若干下がったかも）")
 
 elif data_processing == "2024年11月22日":
-    st.header("11月22日")
+    st.subheader('2024年11月22日', divider='rainbow')
     st.write("- UIデザインの変更")
     st.write("--- 実験の重み付けの指定の部分を、縦ではなく横に出力するように変更")
     st.write("--- サイドバーをプルダウン式ではなく、一覧を表示するようにした")
@@ -111,7 +111,7 @@ elif data_processing == "2024年11月22日":
     st.write("--- RFE：最も特徴量重要度が低いものを削除することを繰り返し、指定した数まで消去をする手法")
 
 elif data_processing == "2024年12月13日":
-    st.title('発表内容')
+    st.subheader('2024年12月13日', divider='rainbow')
     st.header("概要")
     st.write("- UIデザインの変更")
     st.write("--- 今までの発表内容(stramlitで作成したもの)を選択で見れるようにした")
@@ -183,7 +183,7 @@ elif data_processing == "2024年12月13日":
     st.write("- streamlitのUIデザインの変更")
 
 elif data_processing == "2025年1月24日":
-    st.title('発表内容')
+    st.subheader('2025年1月24日', divider='rainbow')
     st.header("概要")
     st.write("- データの可視化")
     st.write("--- 疼痛の種類ごとの各質問項目について(点数の合計人数)図で可視化しました")
@@ -334,7 +334,7 @@ elif data_processing == "2025年1月24日":
     st.write("- streamlitのUIデザインの変更")
 
 elif data_processing == "2025年4月25日":
-    st.title('本日の発表内容')
+    st.subheader('2025年4月25日', divider='rainbow')
     st.header("概要")
     st.write("- 今までの内容")
     st.write("- 実験の概要")
@@ -405,6 +405,6 @@ elif data_processing == "2025年4月25日":
     st.write("- 他のカーネルで実験")
 
 elif data_processing == "2025年5月23日":
-    st.header("何やってるんですか、勉強してください")
+    st.subheader('何やってるんですか、勉強してください', divider='rainbow')
     gif_path = "picture/kounogento.gif"
     st.image(gif_path,caption="河野玄斗")
