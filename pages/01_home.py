@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
 # ラジオボタンを表示
-home_type = st.sidebar.radio("選んでください", ["研究概要", "辞書"])
+home_type = st.sidebar.radio("選んでください", ["研究概要", "辞書", "自己紹介"])
 
 if home_type == "研究概要":
     st.title('ホーム')
@@ -91,5 +91,9 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "辞書":
+    st.subheader('k-NN法', divider='rainbow')
+    st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
+
+elif home_type == "自己紹介":
     st.subheader('k-NN法', divider='rainbow')
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
