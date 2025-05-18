@@ -19,3 +19,6 @@ st.subheader('実行コード', divider='rainbow')
 # コード表示
 code = '''streamlit run app.py'''
 st.code(code, language='python')
+
+st.subheader('参考サイト', divider='rainbow')
+st.write("- [Streamlit_documentation](https://docs.streamlit.io/): streamlitのドキュメント")
