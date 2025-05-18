@@ -21,13 +21,13 @@ home_type = st.sidebar.radio("選んでください", ["研究概要", "辞書",
 
 if home_type == "研究概要":
     st.title('ホーム')
-    st.header("研究内容")
+    st.subheader("研究内容", divider='rainbow')
     st.write("AIモデルの一つであるSVMを用い、整形外科での診断補助システム開発を行う")
-    st.header("背景")
+    st.subheader("背景", divider='rainbow')
     st.write("整形外科の患者が訴える典型的症状に、疼痛（慢性痛の総称）がある。人口の20％以上が何らかの疼痛を感じているとの報告もある程、普遍的な症状の一つ。  \n医師による疼痛原因の診断法は複数開発されている一方、手法により精度の差があることが知られている。")
-    st.header("目的")
+    st.subheader("目的", divider='rainbow')
     st.write("人工知能による疼痛診断の自動化を目指す。  \n医学的診断を人工知能で行う際の制約として、「判断根拠を説明できなければいけない」、また「各医療機関が持つデータ量は限定的」というものがある。  \nこれらを解決するため、「少ないデータでも高い精度を達成しやすい」、そして「判断理由の解釈も比較的容易」という特徴を持つ\nSVMを用いることで、高精度かつ説明可能なAIによる診断補助システム構築を目指す。")
-    st.header("質問項目の説明")
+    st.subheader("質問項目の説明", divider='rainbow')
     # タブの作成
     tab1, tab2, tab3 = st.tabs(["PainDETECT", "BS-POP", "特徴寮拡大"])
     # 各タブに内容を追加
@@ -66,10 +66,10 @@ if home_type == "研究概要":
         st.write("--- D16：病状や手術について繰り返し質問する")
         st.write("--- D18：ちょっとした症状に、これさえなければとこだわる")
 
-    st.header("参考サイト")
+    st.subheader("参考サイト", divider='rainbow')
     st.write("- [Streamlit_documentation](https://docs.streamlit.io/): streamlitのドキュメント参考")
 
-    st.header("今後の予定")
+    st.subheader("今後の予定", divider='rainbow')
     st.write("- 重みの設定")
     st.write("- カーネルのパラメータの変更・設定（色々なカーネルで試す）")
     st.write("- カーネルの関数設定")
@@ -84,7 +84,7 @@ if home_type == "研究概要":
     st.write("- モデルの評価指標の見直し")
     st.write("- Scikit-Learnの学習")
 
-    st.header("実験ログ")
+    st.subheader("実験ログ", divider='rainbow')
     st.write("- 20241101 : streamlit上で実験ができるようにしました")
     st.write("- 20241102 : 今まで利用したCSVファイルのカラムを統一にしました")
     st.write("- 20241106 : 各質問項目における相関係数の出力をしました")
