@@ -95,5 +95,8 @@ elif home_type == "辞書":
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
 
 elif home_type == "自己紹介":
-    st.subheader('k-NN法', divider='rainbow')
-    st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
+    st.subheader('自己紹介(2025年4月11日)', divider='rainbow')
+    img = Image.open('picture/自己紹介01.png')
+    st.image(img, use_container_width=True)
+    img = Image.open('picture/自己紹介02.png')
+    st.image(img, use_container_width=True)
