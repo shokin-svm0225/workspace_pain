@@ -91,4 +91,5 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "辞書":
-    st.write("デフォルトの質問項目に新たな質問項目(特徴量)を作成")
+    st.subheader('k-NN法', divider='rainbow')
+    st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
