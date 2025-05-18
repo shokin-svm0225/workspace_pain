@@ -7,13 +7,13 @@ import altair as alt
 from PIL import Image
 from streamlit_option_menu import option_menu
 
-st.title('データ加工・機械学習のプログラムを表示')
+st.title('プログラムを表示')
 
 # ラジオボタンを表示
 home_type = st.sidebar.radio("選んでください", ["欠損値補完", "特徴量拡大", "SVM(cv2)", "SVM(scikit-learn)", "標準化", "交差検証", "感度と特異度の計算"])
 
 if home_type == "欠損値補完":
-    st.subheader('欠損値補完')
+    st.subheader('欠損値補完', divider='rainbow')
     body_1 = """
     import pandas as pd
     from sklearn.impute import KNNImputer
@@ -90,7 +90,7 @@ if home_type == "欠損値補完":
     st.code(body_1, language="python")
 
 if home_type == "特徴量拡大":
-    st.subheader('特徴量拡大')
+    st.subheader('特徴量拡大', divider='rainbow')
     body_2 = """
     import pandas as pd
 
@@ -140,7 +140,7 @@ if home_type == "特徴量拡大":
     st.code(body_2, language="python")
 
 if home_type == "SVM(cv2)":
-    st.header('SVM(cv2)')
+    st.subheader('SVM(cv2)', divider='rainbow')
     body_3 = """
     import cv2
 
@@ -162,7 +162,7 @@ if home_type == "SVM(cv2)":
     st.code(body_3, language="python")
 
 if home_type == "SVM(scikit-learn)":
-    st.header('SVM(scikit-learn)')
+    st.subheader('SVM(scikit-learn)', divider='rainbow')
     body_4 = """
     from sklearn.svm import SVC
     import joblib
@@ -181,7 +181,7 @@ if home_type == "SVM(scikit-learn)":
     st.code(body_4, language="python")
 
 if home_type == "標準化":
-    st.header('標準化')
+    st.subheader('標準化', divider='rainbow')
     body_5 = """
         from sklearn.preprocessing import StandardScaler
 
@@ -191,7 +191,7 @@ if home_type == "標準化":
     st.code(body_5, language="python")
 
 if home_type == "交差検証":
-    st.header('交差検証')
+    st.subheader('交差検証', divider='rainbow')
     body_6 = """
     from sklearn.model_selection import StratifiedKFold
 
@@ -217,7 +217,7 @@ if home_type == "交差検証":
     st.code(body_6, language="python")
 
 if home_type == "感度と特異度の計算":
-    st.header('感度と特異度の計算')
+    st.subheader('感度と特異度の計算', divider='rainbow')
     body_7 = """
     from sklearn.metrics import confusion_matrix
 
