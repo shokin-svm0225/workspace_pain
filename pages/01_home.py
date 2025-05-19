@@ -106,10 +106,54 @@ elif home_type == "辞書":
         img = Image.open('picture/教師なし学習.jpg')
         st.image(img, use_container_width=True)
     with st.container(border=True):
+        st.subheader('特徴量エンジニアリング（データクレンジング）', divider='rainbow')
+        st.markdown("""
+        破損したデータや不正確なデータを特定し、ドメイン知識などを生かして汎化性能を上げるために新しくデータの特徴量を作成するプロセスのこと。
+        - 欠損値の補完
+        - 特徴量変換
+        - 適切な特徴抽出・特徴量選択
+        - 特徴量スケーリング（標準化・正規化）
+        """)
+    with st.container(border=True):
         st.subheader('k-NN法', divider='rainbow')
         st.markdown("""
         k-NN法（k-nearest neighbor algorithm, k近傍法）は機械学習のアルゴリズムの一つで、データをグループ分けするにあたり、対象データがどのグループに含まれるかを周囲のデータの多数決で推測するという手法である
         - 対象データが近い点を近い順に任意の数、k個だけ選び、その点に最も多く含まれているグループに分類される
+        """)
+    with st.container(border=True):
+        st.subheader('標準化', divider='rainbow')
+        st.markdown("""
+        標準化(Standardization)は、平均を0、分散を1とするスケーリング手法である。  \n
+        （どの特徴量も同じスケールの分布を持つように揃える  例：身長・体重）
+        - あるデータX全体の平均をμ、標準偏差をσとする。
+        """)
+        st.latex(r"""
+        z = \frac{x - \mu}{\sigma}
+        """)
+        st.latex(r"""
+        \sigma = \sqrt{\frac{1}{n} \sum_{i=1}^{n} (x_i - \mu)^2}
+        """)
+    with st.container(border=True):
+        st.subheader('正規化', divider='rainbow')
+        st.markdown("""
+        正規化(Normalization)は、最小値を0、最大値を1とするスケーリング手法である。
+        - あるデータX全体の最大値をX_max、最小値をX_minとする。
+        """)
+        st.latex(r"""
+        x' = \frac{X - X_{\text{min}}}{X_{\text{max}} - X_{\text{min}}}
+        """)
+        st.markdown("""
+        - 注意：外れ値の影響を強く受ける可能性がある
+        """)
+    with st.container(border=True):
+        st.subheader('交差検証(クロスバリデーション)', divider='rainbow')
+        st.markdown("""
+        交差検証（cross-validation）とは、汎化性能を評価する統計的な手法である。
+        また、**過学習**を検出する手法でもある。  \n
+        過学習：学習データと非常によく一致するモデルを作成した結果、新しいデータに対して正しい予測ができなくなる状態のこと
+        - 例：SVMモデルのパラメータ（C）の調整
+          - Cを大きくし過ぎると、線形SVMだとイメージしづらいが、非線形SVMの場合、曲線や曲面と次元数が上がるにつれ
+            ほとんどのデータを正しく分類しようと「無理な境界」を引き、汎化性能が低下し、過学習につながる
         """)
     with st.container(border=True):
         st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
