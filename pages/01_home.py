@@ -113,6 +113,8 @@ elif home_type == "辞書":
         """)
     with st.container(border=True):
         st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
+        img = Image.open('picture/svm説明01.jpg')
+        st.image(img, use_container_width=True)
     with st.container(border=True):
         st.subheader('scikit-learn', divider='rainbow')
         st.markdown("""
