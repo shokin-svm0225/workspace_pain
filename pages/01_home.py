@@ -91,17 +91,25 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "辞書":
+    st.subheader('教師あり学習', divider='rainbow')
+    st.markdown("""
+    入力データと人間があらかじめ付けた正解のラベルに基づき、機械が学習を行い、未知のデータの分類・予測をする
+    """)
+    st.subheader('教師なし学習', divider='rainbow')
+    st.markdown("""
+    ラベルなしデータ・セットを分析し、類似度や規則性に基いてクラスター（群れ・集団）化する
+    """)
     st.subheader('k-NN法', divider='rainbow')
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
     st.subheader('scikit-learn', divider='rainbow')
     st.markdown("""
-                Python で利用できるデータ分析や機械学習のためのライブラリの一つ
+    Python で利用できるデータ分析や機械学習のためのライブラリの一つ
 
-                - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
-                  - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
-                - 非常に充実したドキュメンテーションがある
-                  - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
-                """)
+    - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
+        - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
+    - 非常に充実したドキュメンテーションがある
+        - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
+    """)
     st.markdown("**SVM（サポートベクトルマシン）**")
     body_1 = """
     class sklearn.svm.SVC(C=1.0, kernel='rbf', degree=3, gamma='scale', 
