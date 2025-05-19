@@ -91,66 +91,71 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "辞書":
-    st.subheader('教師あり学習', divider='rainbow')
-    st.markdown("""
-    入力データと人間があらかじめ付けた正解のラベルに基づき、機械が学習を行い、未知のデータの分類・予測をする
-    """)
-    img = Image.open('picture/教師あり学習.jpg')
-    st.image(img, use_container_width=True)
-    st.subheader('教師なし学習', divider='rainbow')
-    st.markdown("""
-    ラベルなしデータ・セットを分析し、類似度や規則性に基いてクラスター（群れ・集団）化する
-    """)
-    img = Image.open('picture/教師なし学習.jpg')
-    st.image(img, use_container_width=True)
-    st.subheader('k-NN法', divider='rainbow')
-    st.markdown("""
-    k-NN法（k-nearest neighbor algorithm, k近傍法）は機械学習のアルゴリズムの一つで、データをグループ分けするにあたり、対象データがどのグループに含まれるかを周囲のデータの多数決で推測するという手法である
-    - 対象データが近い点を近い順に任意の数、k個だけ選び、その点に最も多く含まれているグループに分類される
-    """)
-    st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
-    st.subheader('scikit-learn', divider='rainbow')
-    st.markdown("""
-    Python で利用できるデータ分析や機械学習のためのライブラリの一つ
+    with st.container(border=True):
+        st.subheader('教師あり学習', divider='rainbow')
+        st.markdown("""
+        入力データと人間があらかじめ付けた正解のラベルに基づき、機械が学習を行い、未知のデータの分類・予測をする
+        """)
+        img = Image.open('picture/教師あり学習.jpg')
+        st.image(img, use_container_width=True)
+    with st.container(border=True):
+        st.subheader('教師なし学習', divider='rainbow')
+        st.markdown("""
+        ラベルなしデータ・セットを分析し、類似度や規則性に基いてクラスター（群れ・集団）化する
+        """)
+        img = Image.open('picture/教師なし学習.jpg')
+        st.image(img, use_container_width=True)
+    with st.container(border=True):
+        st.subheader('k-NN法', divider='rainbow')
+        st.markdown("""
+        k-NN法（k-nearest neighbor algorithm, k近傍法）は機械学習のアルゴリズムの一つで、データをグループ分けするにあたり、対象データがどのグループに含まれるかを周囲のデータの多数決で推測するという手法である
+        - 対象データが近い点を近い順に任意の数、k個だけ選び、その点に最も多く含まれているグループに分類される
+        """)
+    with st.container(border=True):
+        st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
+    with st.container(border=True):
+        st.subheader('scikit-learn', divider='rainbow')
+        st.markdown("""
+        Python で利用できるデータ分析や機械学習のためのライブラリの一つ
 
-    - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
-        - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
-    - 非常に充実したドキュメンテーションがある
-        - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
-    """)
-    st.markdown("**SVM（サポートベクトルマシン）**")
-    body_1 = """
-    class sklearn.svm.SVC(C=1.0, kernel='rbf', degree=3, gamma='scale', 
-        coef0=0.0, shrinking=True, probability=False, tol=0.001, 
-        cache_size=200, class_weight=None, verbose=False, max_iter=- 1, 
-        decision_function_shape='ovr', break_ties=False, random_state=None)
-    """
-    st.code(body_1, language="python")
-    st.markdown("**特徴量X, クラスyを学習データとして学習する**")
-    body_2 = """
-    fit(X,y)
-    """
-    st.code(body_2, language="python")
-    st.markdown("**テストデータXに対するクラスの予測結果を出力する**")
-    body_3 = """
-    predict(X)
-    """
-    st.code(body_3, language="python")
-    st.markdown("**K-分割交差検証**")
-    body_4 = """
-    class sklearn.model_selection.StratifiedKFold(n_splits=5, *, shuffle=False, random_state=None)
-    """
-    st.code(body_4, language="python")
-    st.markdown("**標準化**")
-    body_5 = """
-    class sklearn.preprocessing.StandardScaler(*, copy=True, with_mean=True, with_std=True)
-    """
-    st.code(body_5, language="python")
-    st.markdown("**データを学習用とテスト用に分割する**")
-    body_6 = """
-    sklearn.model_selection.train_test_split(*arrays, test_size=None, train_size=None, random_state=None, shuffle=True, stratify=None)
-    """
-    st.code(body_6, language="python")
+        - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
+            - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
+        - 非常に充実したドキュメンテーションがある
+            - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
+        """)
+        st.markdown("**SVM（サポートベクトルマシン）**")
+        body_1 = """
+        class sklearn.svm.SVC(C=1.0, kernel='rbf', degree=3, gamma='scale', 
+            coef0=0.0, shrinking=True, probability=False, tol=0.001, 
+            cache_size=200, class_weight=None, verbose=False, max_iter=- 1, 
+            decision_function_shape='ovr', break_ties=False, random_state=None)
+        """
+        st.code(body_1, language="python")
+        st.markdown("**特徴量X, クラスyを学習データとして学習する**")
+        body_2 = """
+        fit(X,y)
+        """
+        st.code(body_2, language="python")
+        st.markdown("**テストデータXに対するクラスの予測結果を出力する**")
+        body_3 = """
+        predict(X)
+        """
+        st.code(body_3, language="python")
+        st.markdown("**K-分割交差検証**")
+        body_4 = """
+        class sklearn.model_selection.StratifiedKFold(n_splits=5, *, shuffle=False, random_state=None)
+        """
+        st.code(body_4, language="python")
+        st.markdown("**標準化**")
+        body_5 = """
+        class sklearn.preprocessing.StandardScaler(*, copy=True, with_mean=True, with_std=True)
+        """
+        st.code(body_5, language="python")
+        st.markdown("**データを学習用とテスト用に分割する**")
+        body_6 = """
+        sklearn.model_selection.train_test_split(*arrays, test_size=None, train_size=None, random_state=None, shuffle=True, stratify=None)
+        """
+        st.code(body_6, language="python")
 
 elif home_type == "自己紹介":
     st.subheader('自己紹介(2025年4月11日)', divider='rainbow')
