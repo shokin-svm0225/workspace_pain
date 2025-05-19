@@ -102,7 +102,7 @@ elif home_type == "辞書":
                 - 非常に充実したドキュメンテーションがある
                   - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
                 """)
-    st.markdown("- SVM（サポートベクトルマシン）")
+    st.markdown("**SVM（サポートベクトルマシン）**")
     body_1 = """
     class sklearn.svm.SVC(C=1.0, kernel='rbf', degree=3, gamma='scale', 
         coef0=0.0, shrinking=True, probability=False, tol=0.001, 
@@ -110,27 +110,27 @@ elif home_type == "辞書":
         decision_function_shape='ovr', break_ties=False, random_state=None)
     """
     st.code(body_1, language="python")
-    st.markdown("- 特徴量X, クラスyを学習データとして学習する")
+    st.markdown("**特徴量X, クラスyを学習データとして学習する**")
     body_2 = """
     fit(X,y)
     """
     st.code(body_2, language="python")
-    st.markdown("- テストデータXに対するクラスの予測結果を出力する")
+    st.markdown("**テストデータXに対するクラスの予測結果を出力する**")
     body_3 = """
     predict(X)
     """
     st.code(body_3, language="python")
-    st.markdown("- K-分割交差検証")
+    st.markdown("**K-分割交差検証**")
     body_4 = """
     class sklearn.model_selection.StratifiedKFold(n_splits=5, *, shuffle=False, random_state=None)
     """
     st.code(body_4, language="python")
-    st.markdown("- 標準化")
+    st.markdown("**標準化**")
     body_5 = """
     class sklearn.preprocessing.StandardScaler(*, copy=True, with_mean=True, with_std=True)
     """
     st.code(body_5, language="python")
-    st.markdown("- データを学習用とテスト用に分割する")
+    st.markdown("**データを学習用とテスト用に分割する**")
     body_6 = """
     sklearn.model_selection.train_test_split(*arrays, test_size=None, train_size=None, random_state=None, shuffle=True, stratify=None)
     """
