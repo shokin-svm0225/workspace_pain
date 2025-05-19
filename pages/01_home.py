@@ -95,10 +95,14 @@ elif home_type == "辞書":
     st.markdown("""
     入力データと人間があらかじめ付けた正解のラベルに基づき、機械が学習を行い、未知のデータの分類・予測をする
     """)
+    img = Image.open('picture/教師あり学習.jpg')
+    st.image(img, use_container_width=True)
     st.subheader('教師なし学習', divider='rainbow')
     st.markdown("""
     ラベルなしデータ・セットを分析し、類似度や規則性に基いてクラスター（群れ・集団）化する
     """)
+    img = Image.open('picture/教師なし学習.jpg')
+    st.image(img, use_container_width=True)
     st.subheader('k-NN法', divider='rainbow')
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
     st.subheader('scikit-learn', divider='rainbow')
