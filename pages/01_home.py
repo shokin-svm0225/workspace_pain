@@ -113,8 +113,50 @@ elif home_type == "辞書":
         """)
     with st.container(border=True):
         st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
-        img = Image.open('picture/svm説明01.jpg')
+        st.markdown("""
+        対象データが近い点を近い順に任意の数、k個だけ選び、その点に最も多く含まれているグループに分類される
+                    
+        （下の図）
+                    
+        説明変数（例：色、尻尾の長さ、目の形）とし、クラス◼（例：猫）とクラス▲（例：犬）を分類するとする
+        """)
+        img = Image.open('picture/svm説明03.jpg')
         st.image(img, use_container_width=True)
+        st.markdown("""
+        境界線を引く時、２つのクラスの真ん中に引けばいいと考えられる。また、真ん中といっても傾きの違う境界線もいくつか挙げられる。
+        境界線と各クラスの最も近い点を**サポートベクトル**といい、サパートベクトルと境界線との距離（**マージン**）を最大化するように境界線を決めるアルゴリズムがSVMである。
+        （上の図：ハードマージンSVM）
+        """)
+        with st.container(border=True):
+            st.subheader('ソフトマージンSVMとカーネル法', divider='rainbow')
+            st.markdown("""
+            実際には、上の図のように綺麗にプロットされることはなく、下の２つの図のようなプロットになることが多い。
+            線形分離不可のときは、
+            1. _ソフトマージンSVM_
+            2. _カーネル法_
+            という2種類の対処法がある。
+            """)
+            st.markdown("""
+            左の図のように線形分離不可なデータに対して、ペナルティを与えることで誤分類を許して境界線を定めるアルゴリズムを**ソフトマージンSVM**という。
+            - 目的関数と制約条件
+            """)
+            st.latex(r"""
+            \begin{align*}
+            \min_{w, b, \xi} \quad & \frac{1}{2} \|w\|^2 + C \sum_{i \in \{1 \ldots n\}} \xi_i \\
+            \text{s.t.} \quad & y_i(w^\top x_i + b) \geq 1 - \xi_i \quad (i \in \{1 \ldots n\}) \\
+            & \xi_i \geq 0
+            \end{align*}
+            """)
+            st.markdown("""
+            C : 誤判別をどこまで許容するかを表すパラメータ  \n
+            ξ : マージンの内側にはみ出すのを許す度合い  \n
+              \n
+            右の図のように線形分離不可なデータに対して、データの次元をより高い次元に変換することで線形分類を可能にするアルゴリズムを**カーネル法**という。  \n
+            """)
+            img = Image.open('picture/svm説明01.jpg')
+            st.image(img, use_container_width=True)
+
+
     with st.container(border=True):
         st.subheader('scikit-learn', divider='rainbow')
         st.markdown("""
