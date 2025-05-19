@@ -104,6 +104,10 @@ elif home_type == "辞書":
     img = Image.open('picture/教師なし学習.jpg')
     st.image(img, use_container_width=True)
     st.subheader('k-NN法', divider='rainbow')
+    st.markdown("""
+    k-NN法（k-nearest neighbor algorithm, k近傍法）は機械学習のアルゴリズムの一つで、データをグループ分けするにあたり、対象データがどのグループに含まれるかを周囲のデータの多数決で推測するという手法である
+    - 対象データが近い点を近い順に任意の数、k個だけ選び、その点に最も多く含まれているグループに分類される
+    """)
     st.subheader('SVM（サポートベクトルマシン）', divider='rainbow')
     st.subheader('scikit-learn', divider='rainbow')
     st.markdown("""
