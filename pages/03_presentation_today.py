@@ -31,13 +31,13 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("実験の概要", divider='rainbow')
     st.markdown("""
-        主観でつけた重み付けで精度を出し、そこから精度の高い方向へ重みを変えていくことを繰り返し、良い重みを求める。  \n
+        主観でつけた重み付けで精度を出し、そこから神経障害性疼痛に関する感度の高い方向へ重みを変えていくことを繰り返し、良い重みを求める。  \n
         **準備**
         - 質問表：BS-POP
         - 欠損値の補完：欠損値削除・中央値補完・平均値補完・k-NN法補完
         - 重み付け
           - デフォルト：D1,D2,D7,D8,D9,D11,D13,D14,D17：* 1.5、D6,D10,D18：* 0.5、その他：* 1.0
-          - D1から山登り法を繰り返し、どちらに方向を変えても精度が下がったら、次のカラムに移動する
+          - D1から山登り法を繰り返し、どちらに方向を変えても神経障害性疼痛に関する感度が下がったら、次のカラムに移動する
         - カーネル：線形カーネル
         - パラメータチューニング(C)：グリッドサーチ
         - 結果の出力：正答率（平均）, 感度 , 特異度
@@ -48,6 +48,8 @@ with st.container(border=True):
         「今の解よりも良い、今の解に近い解を新しい解にする」ことを繰り返して良い解を求める方法  \n
         （最も代表的な局所探索法として知られている。）
         """)
+        img = Image.open('picture/山登り法.png')
+        st.image(img, caption='https://algo-method.com/descriptions/5HVDQLJjbaMvmBL5', use_container_width=True)
 
 with st.container(border=True):
     st.header("実験結果")
