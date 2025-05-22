@@ -48,7 +48,7 @@ with st.container(border=True):
         「今の解よりも良い、今の解に近い解を新しい解にする」ことを繰り返して良い解を求める方法  \n
         （最も代表的な局所探索法として知られている。）
         """)
-        img = Image.open('picture/山登り法.png')
+        img = Image.open('picture/20255023/山登り法.png')
         st.image(img, caption='https://algo-method.com/descriptions/5HVDQLJjbaMvmBL5', use_container_width=True)
 
 with st.container(border=True):
