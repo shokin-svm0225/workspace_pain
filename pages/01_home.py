@@ -164,7 +164,7 @@ elif home_type == "辞書":
                     
         説明変数（例：色、尻尾の長さ、目の形）とし、クラス◼（例：猫）とクラス▲（例：犬）を分類するとする
         """)
-        img = Image.open('picture/svm説明03.jpg')
+        img = Image.open('picture/home/svm説明03.jpg')
         st.image(img, use_container_width=True)
         st.markdown("""
         境界線を引く時、２つのクラスの真ん中に引けばいいと考えられる。また、真ん中といっても傾きの違う境界線もいくつか挙げられる。
@@ -197,7 +197,7 @@ elif home_type == "辞書":
               \n
             右の図のように線形分離不可なデータに対して、データの次元をより高い次元に変換することで線形分類を可能にするアルゴリズムを**カーネル法**という。  \n
             """)
-            img = Image.open('picture/svm説明01.jpg')
+            img = Image.open('picture/home/svm説明01.jpg')
             st.image(img, use_container_width=True)
 
 
@@ -247,7 +247,7 @@ elif home_type == "辞書":
 
 elif home_type == "自己紹介":
     st.subheader('自己紹介(2025年4月11日)', divider='rainbow')
-    img = Image.open('picture/自己紹介01.png')
+    img = Image.open('picture/home/自己紹介01.png')
     st.image(img, use_container_width=True)
-    img = Image.open('picture/自己紹介02.png')
+    img = Image.open('picture/home/自己紹介02.png')
     st.image(img, use_container_width=True)
