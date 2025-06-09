@@ -316,15 +316,15 @@ if 'checkbox_states_1' not in st.session_state:
 if choice_2 in ["PainDITECT", "FUSION"]:
     st.header("使用するカラムの指定(PainDITECT)")
 
-# 全選択・全解除ボタン
-col_buttons = st.columns(2)
-if col_buttons[0].button('全選択', key='select_all_1'):
-    for key in st.session_state.checkbox_states_1:
-        st.session_state.checkbox_states_1[key] = True
+    # 全選択・全解除ボタン
+    col_buttons = st.columns(2)
+    if col_buttons[0].button('全選択', key='select_all_1'):
+        for key in st.session_state.checkbox_states_1:
+            st.session_state.checkbox_states_1[key] = True
 
-if col_buttons[1].button('全解除', key='deselect_all_1'):
-    for key in st.session_state.checkbox_states_1:
-        st.session_state.checkbox_states_1[key] = False
+    if col_buttons[1].button('全解除', key='deselect_all_1'):
+        for key in st.session_state.checkbox_states_1:
+            st.session_state.checkbox_states_1[key] = False
 
     # チェックボックスの表示（元のスタイルを維持）
     col_1 = st.columns(7)
@@ -526,7 +526,6 @@ for column in stocks:
 edited_df = pd.DataFrame({"columns": stocks, "weights": weights})
 
 # データフレームを表示
-st.markdown("#### 重みづけデータフレーム")
 st.dataframe(edited_df)
 
 # st.markdown('#### データの標準化')
@@ -541,8 +540,6 @@ options = ['欠損値削除', '中央値補完', '平均値補完', 'k-NN法補�
 
 # セレクトボックスを作成し、ユーザーの選択を取得
 data_processing = st.sidebar.selectbox('欠損値補完の方法は？', options, index = None, placeholder="選択してください")
-
-st.markdown("実験開始")
 
 if st.button("開始", help="実験の実行"):
     columns = edited_df["columns"].tolist()
@@ -577,65 +574,116 @@ if st.button("開始", help="実験の実行"):
         scaler = StandardScaler()
         datas = scaler.fit_transform(datas)
 
-    # パラメータの候補を設定
-    # gamma_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000,10000] 
-    C_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000] # 0.0001から10000までの範囲、ステップ幅1
-    k = 5
-    best_score = 0
-    best_params = None
+    # 重みをかける関数
+    def apply_weights(datas, weights_change):
+        return datas * weights_change
 
-    skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
-
-    for C in C_values:
+    # 指定された重みで交差検証精度を返す関数
+    def evaluate(weights_change, datas, labels, C, k=5, return_best_split=False):
+        X_weighted = apply_weights(datas, weights_change)
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
         scores = []
 
-        for train_index, val_index in skf.split(datas, labels):
+        best_fold_score = 0
+        best_X_val, best_y_val, best_pred = None, None, None
 
-            X_train, X_val = datas[train_index], datas[val_index]
+        for train_index, val_index in skf.split(X_weighted, labels):
+            X_train, X_val = X_weighted[train_index], X_weighted[val_index]
             y_train, y_val = labels[train_index], labels[val_index]
 
-            svm = SVC(C=C, kernel='linear', max_iter=1500)
-            svm.fit(X_train, y_train)# トレーニング
+            model = SVC(C=C, kernel='linear', max_iter=1500)
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_val)
+            acc = np.mean(y_pred == y_val)
+            scores.append(acc)
 
-            # バリデーションデータで評価
-            predicted = svm.predict(X_val)
-            score = np.mean(y_val == predicted)
-            scores.append(score)
+            # 評価指標が最高のfoldを保存
+            if return_best_split and acc > best_fold_score:
+                best_fold_score = acc
+                best_X_val = X_val
+                best_y_val = y_val
+                best_pred = y_pred
 
-        avg_score = np.mean(scores)
-        st.write(f"C: {C}, Score: {avg_score:.4f}")
+        if return_best_split:
+                return np.mean(scores), best_X_val, best_y_val, best_pred
+        else:
+            return np.mean(scores)
 
-        if avg_score > best_score:
-            best_score = avg_score
-            best_params = {"C": C}
-            best_model = svm
+    # 山登り法（1つのCに対して最適な重みを探索）
+    def hill_climbing(datas, labels, C, max_iter=1000, step_size=1):
+        n_features = datas.shape[1]
+        weights_change = np.ones(n_features)
+        best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
+        best_weights = weights_change.copy()
 
-        # モデル保存
-        joblib.dump(best_model, MODEL_PATH)
+        scores_over_time = [best_score]  # ← 追加：スコアの履歴
 
-    st.write("最適なパラメータ:", best_params)
-    st.write("最高スコア:", best_score)
+        # Streamlitの進捗バーとスコア表示
+        if show_progress:
+            progress_bar = st.progress(0)
+            score_placeholder = st.empty()
 
-    # モデル読み込み
-    svm = joblib.load(MODEL_PATH)
-    predicted = svm.predict(X_val)
-    
-    # confusion_matrix = np.zeros((3, 3), dtype=int)
-    
-    # for i in range(len(test_labels)):
-    #     index1 = test_labels[i] - 1
-    #     index2 = predicted[i][0] - 1
-    #     confusion_matrix[int(index1)][int(index2)] += 1
-        
-    # st.write("confusion matrix")
-    # st.table(confusion_matrix)
+        for _ in range(max_iter):
+            new_weights = weights_change.copy()
+            idx = np.random.randint(n_features)
+            change = np.random.choice([-step_size, step_size])
+            new_weights[idx] += change
 
-    # score = np.sum(test_labels == predicted.flatten()) / len(test_labels)
-        
-    # st.write("正答率:", score*100, "%")
-        
+            score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(new_weights, datas, labels, C, return_best_split=True)
+            scores_over_time.append(best_score)  # 一旦現状スコアを追加（更新されなければそのまま）
+
+            if score > best_score:
+                weights_change = new_weights
+                best_score = score
+                best_weights = weights_change.copy()
+                best_X_val = X_val_tmp
+                best_y_val = y_val_tmp
+                best_pred = pred_tmp
+                scores_over_time[-1] = best_score  # 実際に更新されたスコアに修正
+
+            if show_progress and (i % 10 == 0 or i == max_iter - 1):
+                progress = int(i * 100 / max_iter)
+                progress_bar.progress(progress)
+
+        return best_weights, best_score, best_X_val, best_y_val, best_pred
+
+    C_values = [0.001, 0.01, 0.1, 1, 10, 100]
+    best_score = 0
+    best_C = None
+    best_weights = None
+    best_X_val = best_y_val = best_pred = None
+
+    # Cのグリッドサーチ（外側ループ）
+    show_progress=True
+    for C in C_values:
+        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp = hill_climbing(datas, labels, C)
+        st.write(f"→ C={C} で得られたスコア: {score:.4f}")
+
+        if score > best_score:
+            best_score = score
+            best_C = C
+            best_weights = weights_change
+            best_X_val = X_val_tmp
+            best_y_val = y_val_tmp
+            best_pred = pred_tmp
+
+    # 最終モデルを学習＆保存
+    X_weighted_final = apply_weights(datas, best_weights)
+    final_model = SVC(C=best_C, kernel='linear', max_iter=1500)
+    final_model.fit(X_weighted_final, labels)
+    joblib.dump(final_model, MODEL_PATH)
+
+    # データフレームを作成
+    best_weights_df = pd.DataFrame({"columns": stocks, "weights": best_weights})
+
+    # 結果表示
+    st.write("✅ 最適なC:", best_C)
+    st.write("✅ 最適な重み:")
+    st.dataframe(best_weights_df)
+    st.write("✅ 最終スコア:", best_score)
+
     # 感度と特異度の計算
-    conf_matrix = confusion_matrix(y_val, predicted, labels=[1, 2, 3])
+    conf_matrix = confusion_matrix(best_y_val, best_pred, labels=[1, 2, 3])
 
     sensitivity_list = []
     specificity_list = []
@@ -655,33 +703,3 @@ if st.button("開始", help="実験の実行"):
         specificity_list.append(specificity)
 
         st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")
-        
-    # # 感度と特異度の表示
-    # st.write("感度と特異度")
-    # st.write("（疼痛1:侵害受容性疼痛,疼痛2:神経障害性疼痛,疼痛3:不明）")
-    # for i in range(3):
-    #     st.write(f"疼痛 {i+1}: 感度 = {sensitivity[i]:.4f}, 特異度 = {specificity[i]:.4f}")
-
-    # 現在の日時を取得
-    dt_now = datetime.datetime.now()
-
-    # アップロードしたCSVファイルのパス
-    LOG_FILE_PATH = 'log/LOG_FILE.csv'
-
-    # 新しいデータを1行にまとめる
-    new_row = {
-        'date': dt_now.strftime('%Y%m%d-%H%M%S'),
-        'data_processing': data_processing,
-        'use_columns': ', '.join(map(str, columns)),
-        'weights': ', '.join(map(str, weights)),
-        'score': str(best_score*100),
-        'sensitivity': ', '.join(f"{x:.4f}" for x in sensitivity_list),
-        'specificity': ', '.join(f"{x:.4f}" for x in specificity_list)
-    }
-
-    # CSVファイルに追記（既存のヘッダーを維持）
-    with open(LOG_FILE_PATH, mode='a', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=new_row.keys())
-
-        # データを一行で追加
-        writer.writerow(new_row)

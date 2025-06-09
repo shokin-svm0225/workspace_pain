@@ -7,7 +7,7 @@ import altair as alt
 from PIL import Image
 from streamlit_option_menu import option_menu
 
-st.title('プログラムを表示')
+st.title('プログラム')
 
 # ラジオボタンを表示
 home_type = st.sidebar.radio("選んでください", ["欠損値補完", "特徴量拡大", "SVM(cv2)", "SVM(scikit-learn)", "標準化", "交差検証", "感度と特異度の計算"])

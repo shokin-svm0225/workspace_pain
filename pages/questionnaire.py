@@ -16,7 +16,7 @@ import datetime
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
-st.title('質問表を表示')
+st.title('質問表')
 st.markdown('#### PainDETECT')
 img = Image.open('質問表/painditect.png')
 # use_column_width 実際のレイアウトの横幅に合わせるか
