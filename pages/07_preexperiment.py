@@ -610,27 +610,23 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter=1000, step_size=1):
+    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=1):
         n_features = datas.shape[1]
         weights_change = np.ones(n_features)
         best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
         best_weights = weights_change.copy()
 
-        scores_over_time = [best_score]  # ← 追加：スコアの履歴
 
         # Streamlitの進捗バーとスコア表示
-        if show_progress:
-            progress_bar = st.progress(0)
-            score_placeholder = st.empty()
+        hill_bar = st.progress(0)
 
-        for _ in range(max_iter):
+        for i in range(max_iter_1):
             new_weights = weights_change.copy()
             idx = np.random.randint(n_features)
             change = np.random.choice([-step_size, step_size])
             new_weights[idx] += change
 
             score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(new_weights, datas, labels, C, return_best_split=True)
-            scores_over_time.append(best_score)  # 一旦現状スコアを追加（更新されなければそのまま）
 
             if score > best_score:
                 weights_change = new_weights
@@ -639,11 +635,9 @@ if st.button("開始", help="実験の実行"):
                 best_X_val = X_val_tmp
                 best_y_val = y_val_tmp
                 best_pred = pred_tmp
-                scores_over_time[-1] = best_score  # 実際に更新されたスコアに修正
 
-            if show_progress and (i % 10 == 0 or i == max_iter - 1):
-                progress = int(i * 100 / max_iter)
-                progress_bar.progress(progress)
+            percent = int((i+1)/max_iter_1 * 100)
+            hill_bar.progress(percent, text=f"進捗状況{percent}%")
 
         return best_weights, best_score, best_X_val, best_y_val, best_pred
 
@@ -654,7 +648,6 @@ if st.button("開始", help="実験の実行"):
     best_X_val = best_y_val = best_pred = None
 
     # Cのグリッドサーチ（外側ループ）
-    show_progress=True
     for C in C_values:
         weights_change, score, X_val_tmp, y_val_tmp, pred_tmp = hill_climbing(datas, labels, C)
         st.write(f"→ C={C} で得られたスコア: {score:.4f}")
