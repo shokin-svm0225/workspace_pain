@@ -83,7 +83,8 @@ with st.container(border=True):
         - 重み付けの初期値
           - 全て1.0
           - 全て乱数
-        - 試行回数：100,1000
+            - 山登り法は初期値によって局所最適解を求めてしまう可能性があるから
+        - 試行回数：100
         - 重み更新の大きさ：0.1,1
         - カーネル：線形カーネル
         - 評価：5-分割交差検証(random_state=42)
@@ -124,7 +125,7 @@ with st.container(border=True):
     st.image(img, caption='k-NN法補完', use_container_width=True)
 
 with st.container(border=True):
-    st.subheader("考察", divider='rainbow')
+    st.subheader("結果・考察", divider='rainbow')
     st.markdown("""
     - 交差検証で評価をしているものの何回か実行すると離れた結果になる
       - 平均値補完では、最初に34.62%と比較的大きい値が出てしまい、その後更新なし
@@ -136,9 +137,10 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("今後の予定の確認", divider='rainbow')
     st.markdown("""
-    - 重み付け
-      - 山登り法の実装
-      - 侵害需要性疼痛と診断されたデータと神経障害性疼痛と診断されたデータの回答傾向を可視化
-      - 他に案があれば教えてください
+    - 山登り法
+      - PainDITECTとFUSIONの質問表でも実装
+      - 試行回数を増やして実験
+      - 乱数の範囲を変えて実験
     - 遺伝的アルゴリズムによる重み付け
+    - 侵害需要性疼痛と診断されたデータと神経障害性疼痛と診断されたデータの回答傾向を可視化
     """)

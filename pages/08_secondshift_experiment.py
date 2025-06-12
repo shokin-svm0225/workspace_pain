@@ -613,7 +613,7 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter_1=10, step_size=0.1):
+    def hill_climbing(datas, labels, C, initial_weights, max_iter_1=100, step_size=0.1):
         n_features = datas.shape[1]
         # weights_change = np.ones(n_features)
         weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
@@ -668,7 +668,7 @@ if st.button("開始", help="実験の実行"):
 
     # Cのグリッドサーチ（外側ループ）
     for C in C_values:
-        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=1000, step_size=0.1)
+        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, initial_weights, max_iter_1=100, step_size=0.1)
         st.write(f"→ C={C} で得られたスコア: {score:.4f}")
         # グラフ描画
         fig, ax = plt.subplots()
