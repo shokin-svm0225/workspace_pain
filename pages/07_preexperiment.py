@@ -19,6 +19,7 @@ from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 from sklearn.svm import SVC
 import joblib
+import matplotlib.pyplot as plt
 
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
@@ -574,6 +575,8 @@ if st.button("開始", help="実験の実行"):
         scaler = StandardScaler()
         datas = scaler.fit_transform(datas)
 
+    initial_weights = np.random.randint(-5, 5, datas.shape[1])
+
     # 重みをかける関数
     def apply_weights(datas, weights_change):
         return datas * weights_change
@@ -610,38 +613,58 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=1):
+    def hill_climbing(datas, labels, C, max_iter_1=10, step_size=0.1):
         n_features = datas.shape[1]
-        weights_change = np.ones(n_features)
+        # weights_change = np.ones(n_features)
+        weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
+        st.write("✅ 初期重み:" + str(weights_change.tolist()))
+
         best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
         best_weights = weights_change.copy()
 
 
         # Streamlitの進捗バーとスコア表示
         hill_bar = st.progress(0)
+        score_history = [best_score]
+
 
         for i in range(max_iter_1):
-            new_weights = weights_change.copy()
-            idx = np.random.randint(n_features)
-            change = np.random.choice([-step_size, step_size])
-            new_weights[idx] += change
+            step_best_score = best_score
+            step_best_weights = weights_change.copy()
+            step_best_X_val, step_best_y_val, step_best_pred = best_X_val, best_y_val, best_pred
 
-            score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(new_weights, datas, labels, C, return_best_split=True)
+            for idx in range(n_features):
+                for delta in [-step_size, 0, step_size]:
+                    trial_weights = weights_change.copy()
+                    trial_weights[idx] += delta
 
-            if score > best_score:
-                weights_change = new_weights
-                best_score = score
-                best_weights = weights_change.copy()
-                best_X_val = X_val_tmp
-                best_y_val = y_val_tmp
-                best_pred = pred_tmp
+                    if delta == 0:
+                        score = best_score
+                        X_val_tmp, y_val_tmp, pred_tmp = best_X_val, best_y_val, best_pred
+                    else:
+                        score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
+                            trial_weights, datas, labels, C, return_best_split=True
+                        )
 
-            percent = int((i+1)/max_iter_1 * 100)
+                    if score > step_best_score:
+                        step_best_score = score
+                        step_best_weights = trial_weights.copy()
+                        step_best_X_val = X_val_tmp
+                        step_best_y_val = y_val_tmp
+                        step_best_pred = pred_tmp
+
+            weights_change = step_best_weights
+            best_weights = weights_change.copy()
+            best_score = step_best_score
+            best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+
+            score_history.append(best_score)
+            percent = int((i + 1) / max_iter_1 * 100)
             hill_bar.progress(percent, text=f"進捗状況{percent}%")
 
-        return best_weights, best_score, best_X_val, best_y_val, best_pred
+        return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
 
-    C_values = [0.001, 0.01, 0.1, 1, 10, 100]
+    C_values = [0.01, 0.1, 1]
     best_score = 0
     best_C = None
     best_weights = None
@@ -649,8 +672,15 @@ if st.button("開始", help="実験の実行"):
 
     # Cのグリッドサーチ（外側ループ）
     for C in C_values:
-        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp = hill_climbing(datas, labels, C)
+        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=1000, step_size=0.1)
         st.write(f"→ C={C} で得られたスコア: {score:.4f}")
+        # グラフ描画
+        fig, ax = plt.subplots()
+        ax.plot(score_history)
+        ax.set_title("Score progression by Hill Climbing")
+        ax.set_xlabel("Step")
+        ax.set_ylabel("Score")
+        st.pyplot(fig)
 
         if score > best_score:
             best_score = score
