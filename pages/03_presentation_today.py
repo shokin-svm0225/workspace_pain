@@ -14,8 +14,7 @@ with st.container(border=True):
     - プロスラムの変更
     - 前回の内容
     - 実験の概要
-    - 実験結果
-    - 考察
+    - 実験結果・考察
     - 今後の予定の確認
     - アドバイス
     """)  
@@ -103,35 +102,57 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("実験結果", divider='rainbow')
     st.markdown("""
-    - 欠損値削除
+    - [-ε,0,+ε]の3方向
     """)
-    img = Image.open('picture/20250523/20250523_欠損値削除.png')
-    st.image(img, caption='欠損値削除', use_container_width=True)
+    img1 = Image.open('picture/20250613/スクリーンショット 2025-06-13 7.56.53.png')
+    img2 = Image.open('picture/20250613/0.1重み初期1.png')
+    img3 = Image.open('picture/20250613/1初期1_100.png')
+    img4 = Image.open('picture/20250613/third0.1.png')
+    img5 = Image.open('picture/20250613/third1_100.png')
+    st.image(img1, caption='欠損値削除', use_container_width=True)
+    # カラムを3つ作成
+    col1, col2 = st.columns(2)
+    # 各カラムに画像を表示
+    with col1:
+        st.image(img2, caption="初期値：全1,更新の大きさ：0.1", use_container_width=True)
+    with col2:
+        st.image(img3, caption="初期値：全1,更新の大きさ：1", use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.image(img4, caption="初期値：乱数,更新の大きさ：0.1", use_container_width=True)
+    with col4:
+        st.image(img5, caption="初期値：乱数,更新の大きさ：1", use_container_width=True)
     st.markdown("""
-    - 中央値補完
+    - [-ε,+ε]の2方向
     """)
-    img = Image.open('picture/20250523/20250523_中央値.png')
-    st.image(img, caption='中央値補完', use_container_width=True)
-    st.markdown("""
-    - 平均値補完
-    最初に34.62%と比較的大きい値が出てしまい、その後更新なし
-    """)
-    img = Image.open('picture/20250523/20250523平均値.png')
-    st.image(img, caption='平均値補完', use_container_width=True)
-    st.markdown("""
-    - k-NN法補完   
-    """)
-    img = Image.open('picture/20250523/20250523_knn.png')
-    st.image(img, caption='k-NN法補完', use_container_width=True)
+    img1 = Image.open('picture/20250613/スクリーンショット 2025-06-13 7.57.46.png')
+    img2 = Image.open('picture/20250613/second全1_100_0.1.png')
+    img3 = Image.open('picture/20250613/second全1.0100_1.png')
+    img4 = Image.open('picture/20250613/second100_0.01.png')
+    img5 = Image.open('picture/20250613/second100_1.png')
+    st.image(img1, caption='欠損値削除', use_container_width=True)
+    # カラムを3つ作成
+    col1, col2 = st.columns(2)
+    # 各カラムに画像を表示
+    with col1:
+        st.image(img2, caption="初期値：全1,更新の大きさ：0.1", use_container_width=True)
+    with col2:
+        st.image(img3, caption="初期値：全1,更新の大きさ：1", use_container_width=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.image(img4, caption="初期値：乱数,更新の大きさ：0.1", use_container_width=True)
+    with col4:
+        st.image(img5, caption="初期値：乱数,更新の大きさ：1", use_container_width=True)
 
 with st.container(border=True):
     st.subheader("結果・考察", divider='rainbow')
     st.markdown("""
-    - 交差検証で評価をしているものの何回か実行すると離れた結果になる
-      - 平均値補完では、最初に34.62%と比較的大きい値が出てしまい、その後更新なし
-    - 主観で重み付けを行うのは厳しいかな
-    - 制度に差があるのは、データ数が少ないから？
-    - 侵害需要性疼痛と診断されたデータと神経障害性疼痛と診断されたデータの回答傾向を可視化し、神経障害性疼痛をうまく識別する特徴量が何かを探して重み付けをするのはどうか
+    - 精度としては以前とあまり変わらず、65%前後で落ち着いている
+    - 初期値や更新の大きさを変えてもどれも数回の試行でスコアが変わらなくなってしまった（特に[-ε,+ε]の2方向）
+      - 原因：交差検証のrandom_stateが固定されているため、少し重みをずらしてもスコアが変わらない・プログラムの間違い
+    - [-ε,+ε]の2方向の場合は、各ステップごとにベストスコアを評価し、必ず「どれか一番良い方向」に更新するため、変わらなくなるのはおかしい？
     """)
 
 with st.container(border=True):
