@@ -7,3 +7,4 @@ altair
 plotly
 streamlit-option-menu
 Pillow
+matplotlib
