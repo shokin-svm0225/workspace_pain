@@ -217,7 +217,7 @@ with st.container(border=True):
         - カーネル：線形カーネル
         - 評価：5-分割交差検証(random_state=42)
         - パラメータチューニング(C)：グリッドサーチ
-        - 結果の出力：正答率（平均）, 感度 , 特異度
+        - 結果の出力：正答率（平均）, 感度 , 特異度, スコアの推移のグラフ
         """)
     with st.container(border=True):
         st.subheader("山登り法", divider='rainbow')
