@@ -636,7 +636,7 @@ if st.button("開始", help="実験の実行"):
             for idx in range(n_features):
                 for delta in [-step_size, 0, step_size]:
                     trial_weights = weights_change.copy()
-                    trial_weights[idx] += delta
+                    trial_weights[idx] += delta #idx番目の特徴量だけ delta 分変化させた新しい重みを作成
 
                     if delta == 0:
                         score = best_score

@@ -22,51 +22,180 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("プログラムの変更", divider='rainbow')
     st.markdown("""
-        - SVMのライブラリをOpenCVからscikit-learnに変更
+        - 山登り法とSVMのプログラムを切り分けて再利用可能なコードの実装
         """)  
     with st.container(border=True):
-        st.subheader('scikit-learn', divider='rainbow')
-        st.markdown("""
-        Python で利用できるデータ分析や機械学習のためのライブラリの一つ
+        st.subheader('プログラムの概要', divider='rainbow')
+        # タブの作成
+        tab1, tab2, tab3 = st.tabs(["山登り法([-ε,0,+ε]の3方向)", "山登り法([-ε,+ε]の2方向)", "SVM(交差検証)"])
+        # 各タブに内容を追加
+        with tab1:
+            body_1 = """
+            # 初期重みを [-5, 5) の範囲でランダムに設定（再現性ありなら np.random.seed も併用）
+            initial_weights = np.random.randint(-5, 5, datas.shape[1])
 
-        - 機械学習のプロジェクト全体を一つのライブラリで管理することが可能
-            - データの前処理、教師あり学習、教師なし学習、モデル選択、評価など
-        - 非常に充実したドキュメンテーションがある
-            - [Scikit-learn_documentation](https://scikit-learn.org/stable/user_guide.html): scikit-learnのドキュメント参考")
-        """)
-        st.markdown("**SVM（サポートベクトルマシン）**")
-        body_1 = """
-        class sklearn.svm.SVC(C=1.0, kernel='rbf', degree=3, gamma='scale', 
-            coef0=0.0, shrinking=True, probability=False, tol=0.001, 
-            cache_size=200, class_weight=None, verbose=False, max_iter=- 1, 
-            decision_function_shape='ovr', break_ties=False, random_state=None)
-        """
-        st.code(body_1, language="python")
-        st.markdown("**特徴量X, クラスyを学習データとして学習する**")
-        body_2 = """
-        fit(X,y)
-        """
-        st.code(body_2, language="python")
-        st.markdown("**テストデータXに対するクラスの予測結果を出力する**")
-        body_3 = """
-        predict(X)
-        """
-        st.code(body_3, language="python")
-        st.markdown("**K-分割交差検証**")
-        body_4 = """
-        class sklearn.model_selection.StratifiedKFold(n_splits=5, *, shuffle=False, random_state=None)
-        """
-        st.code(body_4, language="python")
-        st.markdown("**標準化**")
-        body_5 = """
-        class sklearn.preprocessing.StandardScaler(*, copy=True, with_mean=True, with_std=True)
-        """
-        st.code(body_5, language="python")
-        st.markdown("**データを学習用とテスト用に分割する**")
-        body_6 = """
-        sklearn.model_selection.train_test_split(*arrays, test_size=None, train_size=None, random_state=None, shuffle=True, stratify=None)
-        """
-        st.code(body_6, language="python")
+            # 山登り法（1つのCに対して最適な重みを探索）
+            def hill_climbing(datas, labels, C, initial_weights, max_iter_1=100, step_size=1):
+                n_features = datas.shape[1]
+                # weights_change = np.ones(n_features)
+                weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
+                st.write("✅ 初期重み:" + str(weights_change.tolist()))
+
+                best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
+                best_weights = weights_change.copy()
+
+
+                # Streamlitの進捗バーとスコア表示
+                hill_bar = st.progress(0)
+                score_history = [best_score]
+
+
+                for i in range(max_iter_1):
+                    step_best_score = best_score
+                    step_best_weights = weights_change.copy()
+                    step_best_X_val, step_best_y_val, step_best_pred = best_X_val, best_y_val, best_pred
+
+                    for idx in range(n_features):
+                        for delta in [-step_size, 0, step_size]:
+                            trial_weights = weights_change.copy()
+                            trial_weights[idx] += delta #idx番目の特徴量だけ delta 分変化させた新しい重みを作成
+
+                            # delta = 0 のときは再評価せず、現在のベストスコアと検証結果をそのまま使用
+                            if delta == 0:
+                                score = best_score
+                                X_val_tmp, y_val_tmp, pred_tmp = best_X_val, best_y_val, best_pred
+                            else:
+                                score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
+                                    trial_weights, datas, labels, C, return_best_split=True
+                                )
+
+                            # 各ステップの中、もっとも良いスコアが得られた場合は、その情報を更新・記録
+                            if score > step_best_score:
+                                step_best_score = score
+                                step_best_weights = trial_weights.copy()
+                                step_best_X_val = X_val_tmp
+                                step_best_y_val = y_val_tmp
+                                step_best_pred = pred_tmp
+
+                    # 一番良かった方向へ重みを更新し、スコアや予測結果を上書き
+                    weights_change = step_best_weights
+                    best_weights = weights_change.copy()
+                    best_score = step_best_score
+                    best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+
+                    # スコア履歴に今回のベストスコアを追加
+                    score_history.append(best_score)
+                    percent = int((i + 1) / max_iter_1 * 100)
+                    hill_bar.progress(percent, text=f"進捗状況{percent}%")
+
+                return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
+            """
+            st.code(body_1, language="python")
+
+        with tab2:
+            body_2 = """
+            # 初期重みを [-5, 5) の範囲でランダムに設定（再現性ありなら np.random.seed も併用）
+            initial_weights = np.random.randint(-5, 5, datas.shape[1])
+
+            # 山登り法で、1つのCに対して最適な特徴量の重みベクトルを探索
+            def hill_climbing(datas, labels, C, initial_weights, max_iter_1=100, step_size=0.1):
+                n_features = datas.shape[1]
+
+                # 初期重みをコピー（元の初期重みは他のC値でも使えるように保持）
+                weights_change = initial_weights.copy()
+                st.write("✅ 初期重み:" + str(weights_change.tolist()))
+
+                # 初期重みに対するスコアと検証データの情報を取得
+                best_score, best_X_val, best_y_val, best_pred = evaluate(
+                    weights_change, datas, labels, C, return_best_split=True
+                )
+                best_weights = weights_change.copy()
+
+                # Streamlit の進捗バーを初期化
+                hill_bar = st.progress(0)
+                score_history = [best_score]  # スコアの履歴を保存
+
+                # hill climbing を max_iter_1 回繰り返す
+                for i in range(max_iter_1):
+                    # 各ステップで最良のスコアを探す
+                    step_best_score = best_score
+                    step_best_weights = weights_change.copy()
+                    step_best_X_val, step_best_y_val, step_best_pred = best_X_val, best_y_val, best_pred
+
+                    # 各特徴量に対して ±step_size 変更を試す
+                    for idx in range(n_features):
+                        for delta in [-step_size, step_size]:
+                            trial_weights = weights_change.copy()  # 現在の重みをコピー
+                            trial_weights[idx] += delta            # 一つの特徴量だけを変更
+
+                            # 新しい重みでモデルを評価
+                            score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
+                                trial_weights, datas, labels, C, return_best_split=True
+                            )
+
+                            # スコアが改善されたら、その重みを保存
+                            if score > step_best_score:
+                                step_best_score = score
+                                step_best_weights = trial_weights.copy()
+                                step_best_X_val = X_val_tmp
+                                step_best_y_val = y_val_tmp
+                                step_best_pred = pred_tmp
+
+                    # ステップ内で最良だった重みを採用（更新）
+                    weights_change = step_best_weights
+                    best_weights = weights_change.copy()
+                    best_score = step_best_score
+                    best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+
+                    # スコア履歴の更新と進捗表示
+                    score_history.append(best_score)
+                    percent = int((i + 1) / max_iter_1 * 100)
+                    hill_bar.progress(percent, text=f"進捗状況{percent}%")
+
+                # 最終的に見つかった最良の重みとスコア、検証結果、スコアの推移を返す
+                return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
+            """
+            st.code(body_2, language="python")
+
+        with tab3:
+            body_3 = """
+            # 重みをかける関数
+            def apply_weights(datas, weights_change):
+                return datas * weights_change
+
+            # 指定された重みで交差検証精度を返す関数
+            def evaluate(weights_change, datas, labels, C, k=5, return_best_split=False):
+                X_weighted = apply_weights(datas, weights_change)
+                skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+                scores = []
+
+                best_fold_score = 0
+                best_X_val, best_y_val, best_pred = None, None, None
+
+                for train_index, val_index in skf.split(X_weighted, labels):
+                    X_train, X_val = X_weighted[train_index], X_weighted[val_index]
+                    y_train, y_val = labels[train_index], labels[val_index]
+
+                    model = SVC(C=C, kernel='linear', max_iter=1500)
+                    model.fit(X_train, y_train)
+                    y_pred = model.predict(X_val)
+                    acc = np.mean(y_pred == y_val)
+                    scores.append(acc)
+
+                    # 評価指標が最高のfoldを保存
+                    if return_best_split and acc > best_fold_score:
+                        best_fold_score = acc
+                        best_X_val = X_val
+                        best_y_val = y_val
+                        best_pred = y_pred
+
+                if return_best_split:
+                        return np.mean(scores), best_X_val, best_y_val, best_pred
+                else:
+                    return np.mean(scores)
+            """
+            st.code(body_3, language="python")
+
         
 with st.container(border=True):
     st.subheader("実験の概要", divider='rainbow')
