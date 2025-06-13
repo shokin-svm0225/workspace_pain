@@ -11,7 +11,7 @@ st.title('本日の発表内容')
 with st.container(border=True):
     st.subheader("アジェンダ", divider='rainbow')
     st.markdown("""
-    - プロスラムの変更
+    - プロスラム変更
     - 前回の内容
     - 実験の概要
     - 実験結果・考察
