@@ -94,7 +94,7 @@ with st.container(border=True):
 
         with tab2:
             body_2 = """
-            # 初期重みを [-5, 5) の範囲でランダムに設定（再現性ありなら np.random.seed も併用）
+            # 初期重みを [-5, 5) の範囲でランダムに設定
             initial_weights = np.random.randint(-5, 5, datas.shape[1])
 
             # 山登り法で、1つのCに対して最適な特徴量の重みベクトルを探索
