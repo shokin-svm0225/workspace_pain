@@ -31,7 +31,7 @@ with st.container(border=True):
         # 各タブに内容を追加
         with tab1:
             body_1 = """
-            # 初期重みを [-5, 5) の範囲でランダムに設定（再現性ありなら np.random.seed も併用）
+            # 初期重みを [-5, 5) の範囲でランダムに設定
             initial_weights = np.random.randint(-5, 5, datas.shape[1])
 
             # 山登り法（1つのCに対して最適な重みを探索）
