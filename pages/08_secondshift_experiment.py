@@ -25,6 +25,25 @@ TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
 
 st.title('疼痛診断システムの開発')
+
+# カラムを3つ作成
+col1, col2 = st.columns(2)
+# 各カラムに画像を表示
+with col1:
+    with st.container(border=True):
+        st.subheader('山登り法（ローカルベスト）', divider='rainbow')
+        st.markdown("""
+        現在までのベストスコアを基準にせず、
+        毎ステップの中でだけ一番良いスコアの候補を選んで、常に重みを更新していく
+        """)
+with col2:
+    with st.container(border=True):
+        st.subheader('山登り法（ローカルベスト）', divider='rainbow')
+        st.markdown("""
+        現在までのベストスコアを基準にせず、
+        毎ステップの中でだけ一番良いスコアの候補を選んで、常に重みを更新していく
+        """)
+
 # セレクトボックスのオプションを定義
 options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
 
