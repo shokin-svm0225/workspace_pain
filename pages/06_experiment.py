@@ -23,7 +23,7 @@ import joblib
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
 
-st.title('疼痛診断システムの開発')
+st.title('実験')
 # セレクトボックスのオプションを定義
 options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
 

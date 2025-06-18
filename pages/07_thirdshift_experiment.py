@@ -24,24 +24,31 @@ import matplotlib.pyplot as plt
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
 
-st.title('疼痛診断システムの開発')
+st.title('実験')
 
-# カラムを3つ作成
-col1, col2 = st.columns(2)
+with st.container(border=True):
+    col1, col2 = st.columns(2)
 # 各カラムに画像を表示
-with col1:
-    with st.container(border=True):
-        st.subheader('山登り法（グローバルベスト）', divider='rainbow')
+    with col1:
+        # with st.container(border=True):
+        st.subheader('山登り法', divider='rainbow')
         st.markdown("""
+        - グローバルベスト \n
         各特徴量ごとに「+ε/-ε/±0の三方向」（現在までのベストスコアを考慮）で正答率を出し、3×n(特徴量)通りの中で一番良い方向に更新していく
         """)
-with col2:
-    with st.container(border=True):
-        st.subheader('山登り法（グローバルベスト）', divider='rainbow')
-        st.markdown("""
-        現在までのベストスコアを基準にせず、
-        毎ステップの中でだけ一番良いスコアの候補を選んで、常に重みを更新していく
-        """)
+    with col2:
+        st.code("""
+        重み = [1, 1, 1, 1, 1]   ← 初期状態  
+        ↓  
+        各特徴量について  
+            重み + [-ε, 0, +ε](delta) の3通りを試す  
+            ・delta = 0 のときは評価せず、今のベストスコアを使う  
+            → スコアが最も良い重みを記録  
+        ↓  
+        全特徴量を一巡したら一番良かった重みに更新  
+        ↓  
+        これを max_iter 回繰り返す
+        """, language="text")
 
 # セレクトボックスのオプションを定義
 options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
