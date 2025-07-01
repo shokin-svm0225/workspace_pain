@@ -20,6 +20,7 @@ from streamlit_option_menu import option_menu
 from sklearn.svm import SVC
 import joblib
 import matplotlib.pyplot as plt
+import random
 
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
@@ -639,7 +640,7 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter_1=15, step_size=1):
+    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1):
         n_features = datas.shape[1]
         weights_change = np.ones(n_features)
         # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
@@ -656,9 +657,8 @@ if st.button("開始", help="実験の実行"):
 
 
         for i in range(max_iter_1):
-            step_best_score = best_score
-            step_best_weights = weights_change.copy()
-            step_best_X_val, step_best_y_val, step_best_pred = best_X_val, best_y_val, best_pred
+            step_best_score = -np.inf 
+            candidates = [] 
 
             for idx in range(n_features):
                 for delta in [-step_size, step_size]:
@@ -670,17 +670,19 @@ if st.button("開始", help="実験の実行"):
                         trial_weights, datas, labels, C, return_best_split=True
                     )
 
-                    if score > step_best_score:
-                        step_best_score = score
-                        step_best_weights = trial_weights.copy()
-                        step_best_X_val = X_val_tmp
-                        step_best_y_val = y_val_tmp
-                        step_best_pred = pred_tmp
+                if score > step_best_score:
+                    step_best_score = score
+                    candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]  # 🔄 新しく記録
+                elif score == step_best_score:
+                    candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)) 
 
-            weights_change = step_best_weights
+            # ✅ スコアが同じ候補からランダムに1つを選ぶ
+            selected_weights, selected_X_val, selected_y_val, selected_pred = random.choice(candidates)
+            weights_change = selected_weights
             best_weights = weights_change.copy()
             best_score = step_best_score
-            best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+            best_X_val, best_y_val, best_pred = selected_X_val, selected_y_val, selected_pred
+
 
             score_history.append(best_score)
             percent = int((i + 1) / max_iter_1 * 100)
@@ -696,7 +698,7 @@ if st.button("開始", help="実験の実行"):
 
     # Cのグリッドサーチ（外側ループ）
     for C in C_values:
-        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=15, step_size=1)
+        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1)
         st.write(f"→ C={C} で得られたスコア: {score:.4f}")
         # グラフ描画
         fig, ax = plt.subplots()

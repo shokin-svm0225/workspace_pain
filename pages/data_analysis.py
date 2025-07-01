@@ -1,6 +1,7 @@
 import streamlit as st
 import itertools
 import plotly.express as px
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import altair as alt
@@ -15,6 +16,81 @@ import csv
 import datetime
 from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
+
+st.title('データ分析')
+
+# セレクトボックスのオプションを定義
+options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
+
+# セレクトボックスを作成し、ユーザーの選択を取得
+choice_1 = st.sidebar.selectbox('データ分析', options, index = None, placeholder="選択してください")
+
+# ファイル読み込みと処理
+if choice_1:
+    if choice_1 == '欠損値データ削除':
+        df1 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_侵害.csv')
+        df2 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_神経.csv')
+        df3 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_不明.csv')
+    elif choice_1 == '中央値補完':
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_median_神経障害性疼痛.csv')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_median_不明.csv')
+    elif choice_1 == '平均値補完':
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_mean_侵害受容性疼痛.csv')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_mean_神経障害性疼痛.csv')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_mean_不明.csv')
+    elif choice_1 == 'k-NN法補完':
+        df1 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_侵害受容性疼痛.csv')
+        df2 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_神経障害性疼痛.csv')
+        df3 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_不明.csv')
+
+    # 質問項目の抽出
+    question_cols = [col for col in df1.columns if col.startswith('P') or col.startswith('D')]
+
+    # 度数分布を計算する関数
+    def calculate_value_counts(df, columns):
+        return pd.DataFrame({col: df[col].value_counts().sort_index() for col in columns}).fillna(0)
+
+    counts_df1 = calculate_value_counts(df1, question_cols)
+    counts_df2 = calculate_value_counts(df2, question_cols)
+    counts_df3 = calculate_value_counts(df3, question_cols)
+
+    score_range = sorted(set(counts_df1.index).union(counts_df2.index).union(counts_df3.index))
+
+    # 2列表示（matplotlibのグリッドで配置）
+    n_cols = 2
+    n_rows = int(np.ceil(len(question_cols) / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 3 * n_rows))
+    legend_labels = []  # 凡例ラベル管理
+
+    for i, col in enumerate(question_cols):
+        r, c = divmod(i, n_cols)
+        ax = axes[r][c] if n_cols > 1 else axes[r]
+        s_vals = counts_df1[col].reindex(score_range, fill_value=0)
+        k_vals = counts_df2[col].reindex(score_range, fill_value=0)
+        f_vals = counts_df3[col].reindex(score_range, fill_value=0)
+
+        bar1 = ax.bar(score_range, s_vals, label='Nociceptive Pain', color='navy')
+        bar2 = ax.bar(score_range, k_vals, bottom=s_vals, label='Neuropathic Pain', color='skyblue')
+        bar3 = ax.bar(score_range, f_vals, bottom=s_vals + k_vals, label='Unknown', color='red')
+
+        if i == 0:
+            legend_labels = [bar1[0], bar2[0], bar3[0]]  # 最初のグラフからのみ取得
+
+        ax.set_title(f'{col}')
+        ax.set_xlabel('score')
+        ax.set_ylabel('people')
+        ax.set_xticks(score_range)
+
+    fig.suptitle('Score_distribution[P1-D18]', fontsize=18)
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.legend(legend_labels, ['Nociceptive Pain', 'Neuropathic Pain', 'Unknown'], loc='upper right')
+
+    st.pyplot(fig)
+
+
+
+
 
 def show():
     st.title('データ分析')
