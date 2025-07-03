@@ -601,7 +601,7 @@ if st.button("開始", help="実験の実行"):
         scaler = StandardScaler()
         datas = scaler.fit_transform(datas)
 
-    # initial_weights = np.random.randint(-5, 5, datas.shape[1])
+    initial_weights = np.random.randint(-5, 5, datas.shape[1])
 
     # 重みをかける関数
     def apply_weights(datas, weights_change):
@@ -641,8 +641,8 @@ if st.button("開始", help="実験の実行"):
     # 山登り法（1つのCに対して最適な重みを探索）
     def hill_climbing(datas, labels, C, max_iter_1=15, step_size=1):
         n_features = datas.shape[1]
-        weights_change = np.ones(n_features)
-        # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
+        # weights_change = np.ones(n_features)
+        weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
         weights_change = weights_change.astype(float)
         st.write("✅ 初期重み:" + str([int(w) for w in weights_change]))
 
