@@ -20,7 +20,7 @@ from streamlit_option_menu import option_menu
 from sklearn.svm import SVC
 import joblib
 import matplotlib.pyplot as plt
-import random
+import matplotlib.ticker as ticker
 
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
@@ -28,23 +28,22 @@ MODEL_PATH = "svm_model.pkl"
 st.title('実験')
 
 with st.container(border=True):
-    # カラムを3つ作成
     col1, col2 = st.columns(2)
-    # 各カラムに画像を表示
+# 各カラムに画像を表示
     with col1:
         # with st.container(border=True):
         st.subheader('山登り法', divider='rainbow')
         st.markdown("""
-        - ローカルベスト \n
-        現在までのベストスコアを基準にせず、
-        毎ステップの中でだけ一番良いスコアの候補を選んで、常に重みを更新していく
+        - グローバルベスト \n
+        各特徴量ごとに「+ε/-ε/±0の三方向」（現在までのベストスコアを考慮）で正答率を出し、3×n(特徴量)通りの中で一番良い方向に更新していく
         """)
     with col2:
         st.code("""
         重み = [1, 1, 1, 1, 1]   ← 初期状態  
         ↓  
         各特徴量について  
-            重み + [-ε, +ε] の2通りを試す   
+            重み + [-ε, 0, +ε](delta) の3通りを試す  
+            ・delta = 0 のときは評価せず、今のベストスコアを使う  
             → スコアが最も良い重みを記録  
         ↓  
         全特徴量を一巡したら一番良かった重みに更新  
@@ -640,7 +639,7 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1):
+    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.01):
         n_features = datas.shape[1]
         weights_change = np.ones(n_features)
         # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
@@ -657,64 +656,82 @@ if st.button("開始", help="実験の実行"):
 
 
         for i in range(max_iter_1):
-            step_best_score = -np.inf 
-            candidates = [] 
+            step_best_score = best_score
+            step_best_weights = weights_change.copy()
+            step_best_X_val, step_best_y_val, step_best_pred = best_X_val, best_y_val, best_pred
 
             for idx in range(n_features):
-                for delta in [-step_size, step_size]:
+                for delta in [-step_size, 0, step_size]:
                     trial_weights = weights_change.copy()
                     trial_weights = trial_weights.astype(float)
-                    trial_weights[idx] += delta
+                    trial_weights[idx] += delta #idx番目の特徴量だけ delta 分変化させた新しい重みを作成
 
-                    score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
-                        trial_weights, datas, labels, C, return_best_split=True
-                    )
+                    if delta == 0:
+                        score = best_score
+                        X_val_tmp, y_val_tmp, pred_tmp = best_X_val, best_y_val, best_pred
+                    else:
+                        score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
+                            trial_weights, datas, labels, C, return_best_split=True
+                        )
 
-                if score > step_best_score:
-                    step_best_score = score
-                    candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]  # 🔄 新しく記録
-                elif score == step_best_score:
-                    candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)) 
-
-            # ✅ スコアが同じ候補からランダムに1つを選ぶ
-            selected_weights, selected_X_val, selected_y_val, selected_pred = random.choice(candidates)
-            weights_change = selected_weights
-            best_weights = weights_change.copy()
-            best_score = step_best_score
-            best_X_val, best_y_val, best_pred = selected_X_val, selected_y_val, selected_pred
+                    if score > step_best_score:
+                        step_best_score = score
+                        step_best_weights = trial_weights.copy()
+                        step_best_X_val = X_val_tmp
+                        step_best_y_val = y_val_tmp
+                        step_best_pred = pred_tmp
 
 
+            # ✅ 一番良かったものだけ採用（変更しても、しなくてもOK）
+            if step_best_score > best_score:
+                weights_change = step_best_weights
+                best_weights = weights_change.copy()
+                best_score = step_best_score
+                best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+            else:
+                break  # 改善しなければ早期終了
             score_history.append(best_score)
             percent = int((i + 1) / max_iter_1 * 100)
             hill_bar.progress(percent, text=f"進捗状況{percent}%")
 
         return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
 
+    step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5] 
     C_values = [0.01, 0.1, 1]
     best_score = 0
     best_C = None
+    best_step_size = None
     best_weights = None
     best_X_val = best_y_val = best_pred = None
+    all_results = []
 
-    # Cのグリッドサーチ（外側ループ）
-    for C in C_values:
-        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1)
-        st.write(f"→ C={C} で得られたスコア: {score:.4f}")
-        # グラフ描画
-        fig, ax = plt.subplots()
-        ax.plot(score_history)
-        ax.set_title("Score progression by Hill Climbing")
-        ax.set_xlabel("Step")
-        ax.set_ylabel("Score")
-        st.pyplot(fig)
+    for step_size in step_sizes:
+        st.subheader(f"🔍 step_size = {step_size} の結果")
+        # Cのグリッドサーチ（外側ループ）
+        for C in C_values:
+            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=30, step_size=step_size)
 
-        if score > best_score:
-            best_score = score
-            best_C = C
-            best_weights = weights_change
-            best_X_val = X_val_tmp
-            best_y_val = y_val_tmp
-            best_pred = pred_tmp
+            # 結果記録
+            all_results.append({"step_size": step_size, "C": C, "score": score})
+
+            st.write(f"→ C={C} で得られたスコア: {score:.4f}")
+            # グラフ描画
+            fig, ax = plt.subplots()
+            ax.plot(range(len(score_history)), score_history)
+            ax.set_title("Score progression by Hill Climbing")
+            ax.set_xlabel("Step")
+            ax.set_ylabel("Score")
+            ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            st.pyplot(fig)
+
+            if score > best_score:
+                best_score = score
+                best_C = C
+                best_step_size = step_size
+                best_weights = weights_change
+                best_X_val = X_val_tmp
+                best_y_val = y_val_tmp
+                best_pred = pred_tmp
 
     # 最終モデルを学習＆保存
     X_weighted_final = apply_weights(datas, best_weights)
@@ -723,7 +740,17 @@ if st.button("開始", help="実験の実行"):
     joblib.dump(final_model, MODEL_PATH)
 
     # データフレームを作成
-    best_weights_df = pd.DataFrame({"columns": stocks, "weights": best_weights})
+    # best_weights_df = pd.DataFrame(best_weights.astype(float),{"columns": stocks, "weights": best_weights})
+    best_weights_df = pd.DataFrame(best_weights.astype(float), index=stocks, columns=["Weight"])
+
+    # ✅ ここにスコア一覧表を表示
+    st.subheader("📊 step_size × C ごとのスコアまとめ")
+    results_df = pd.DataFrame([
+        {"step_size": r["step_size"], "C": r["C"], "score": r["score"]}
+        for r in all_results
+    ])
+    results_df["score"] = (results_df["score"] * 100).map(lambda x: f"{x:.2f}%")
+    st.dataframe(results_df)
 
     # 結果表示
     st.write("✅ 最適なC:", best_C)
