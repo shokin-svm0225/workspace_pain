@@ -60,26 +60,20 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("実験結果①", divider='rainbow')
     st.markdown("""
-    - シグモイドカーネル
+    - [前回の実験]PainDITECT・FUSIONの質問表
     """)
-    img1 = Image.open('picture/20250613/スクリーンショット 2025-06-13 7.56.53.png')
-    img2 = Image.open('picture/20250613/0.1重み初期1.png')
-    img3 = Image.open('picture/20250613/1初期1_100.png')
-    st.image(img1, caption='FUSION', use_container_width=True)
-    st.image(img2, caption="BS-POP", use_container_width=True)
-    st.image(img3, caption="PainDITECT", use_container_width=True)
+    img1 = Image.open('picture/20250711/PAIN.pngg')
+    img2 = Image.open('picture/20250711/FUSION.png')
+    st.image(img1, caption='PainDITECT', use_container_width=True)
+    st.image(img2, caption="FUSION", use_container_width=True)
 
     st.subheader("実験結果②", divider='rainbow')
     st.markdown("""
-    - シグモイドカーネル
+    - 更新幅を小さい範囲で山登り法を実施
     """)
-    img1 = Image.open('picture/20250613/スクリーンショット 2025-06-13 7.56.53.png')
-    img2 = Image.open('picture/20250613/0.1重み初期1.png')
-    img3 = Image.open('picture/20250613/1初期1_100.png')
+    img1 = Image.open('picture/20250711/更新幅.png')
     st.image(img1, caption='FUSION', use_container_width=True)
-    st.image(img2, caption="BS-POP", use_container_width=True)
-    st.image(img3, caption="PainDITECT", use_container_width=True)
-    
+
     st.subheader("実験結果③", divider='rainbow')
     st.markdown("""
     - シグモイドカーネル
