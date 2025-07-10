@@ -22,8 +22,13 @@ st.title('データ分析')
 # セレクトボックスのオプションを定義
 options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
 
+options_1 = ['標準化', '那須川天心']
+
 # セレクトボックスを作成し、ユーザーの選択を取得
-choice_1 = st.sidebar.selectbox('データ分析', options, index = None, placeholder="選択してください")
+choice_1 = st.sidebar.selectbox('データ分布', options, index = None, placeholder="選択してください")
+
+# セレクトボックスを作成し、ユーザーの選択を取得
+choice_2 = st.sidebar.selectbox('データ変換', options_1, index = None, placeholder="選択してください")
 
 # ファイル読み込みと処理
 if choice_1:
@@ -88,8 +93,19 @@ if choice_1:
 
     st.pyplot(fig)
 
-
-
+if choice_2:
+    if choice_2 == '標準化':
+        df4 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing.csv')
+        # 数値データの標準化
+        numeric_cols = df4.select_dtypes(include=["float64", "int64"]).columns
+        scaler = StandardScaler()
+        df_standardized = df4.copy()
+        df_standardized[numeric_cols] = scaler.fit_transform(df4[numeric_cols])
+        # データ表示
+        st.subheader("📊 標準化後のデータ")
+        st.dataframe(df_standardized)
+    elif choice_2 == '中央値補完':
+        df5 = pd.read_csv('data/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv')
 
 
 def show():
