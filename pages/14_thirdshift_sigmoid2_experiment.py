@@ -21,6 +21,8 @@ from sklearn.svm import SVC
 import joblib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 TEST_DATA_RATIO = 0.3
 MODEL_PATH = "svm_model.pkl"
@@ -601,13 +603,12 @@ if st.button("開始", help="実験の実行"):
         scaler = StandardScaler()
         datas = scaler.fit_transform(datas)
 
-    # initial_weights = np.random.randint(-5, 5, datas.shape[1])
+    initial_weights = np.random.randint(-5, 5, datas.shape[1]).astype(float)
 
-    # 重みをかける関数
+    # === 共通関数群 ===
     def apply_weights(datas, weights_change):
         return datas * weights_change
 
-    # 指定された重みで交差検証精度を返す関数
     def evaluate(weights_change, datas, labels, C, gamma=0.1, coef0=0.0, k=5, return_best_split=False):
         X_weighted = apply_weights(datas, weights_change)
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
@@ -626,7 +627,6 @@ if st.button("開始", help="実験の実行"):
             acc = np.mean(y_pred == y_val)
             scores.append(acc)
 
-            # 評価指標が最高のfoldを保存
             if return_best_split and acc > best_fold_score:
                 best_fold_score = acc
                 best_X_val = X_val
@@ -634,26 +634,18 @@ if st.button("開始", help="実験の実行"):
                 best_pred = y_pred
 
         if return_best_split:
-                return np.mean(scores), best_X_val, best_y_val, best_pred
+            return np.mean(scores), best_X_val, best_y_val, best_pred
         else:
             return np.mean(scores)
 
-    # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, gamma, coef0, max_iter_1=100, step_size=0.01):
+    def hill_climbing(datas, labels, C, gamma, coef0, initial_weights, max_iter_1=30, step_size=0.01):
         n_features = datas.shape[1]
-        weights_change = np.ones(n_features)
-        # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
-        weights_change = weights_change.astype(float)
-        st.write("✅ 初期重み:" + str([int(w) for w in weights_change]))
+        # weights_change = np.ones(n_features).astype(float)
+        weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
 
         best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, coef0, return_best_split=True)
         best_weights = weights_change.copy()
-
-
-        # Streamlitの進捗バーとスコア表示
-        hill_bar = st.progress(0)
         score_history = [best_score]
-
 
         for i in range(max_iter_1):
             step_best_score = best_score
@@ -663,8 +655,7 @@ if st.button("開始", help="実験の実行"):
             for idx in range(n_features):
                 for delta in [-step_size, 0, step_size]:
                     trial_weights = weights_change.copy()
-                    trial_weights = trial_weights.astype(float)
-                    trial_weights[idx] += delta #idx番目の特徴量だけ delta 分変化させた新しい重みを作成
+                    trial_weights[idx] += delta
 
                     if delta == 0:
                         score = best_score
@@ -681,121 +672,156 @@ if st.button("開始", help="実験の実行"):
                         step_best_y_val = y_val_tmp
                         step_best_pred = pred_tmp
 
-
-            # ✅ 一番良かったものだけ採用（変更しても、しなくてもOK）
             if step_best_score > best_score:
                 weights_change = step_best_weights
                 best_weights = weights_change.copy()
                 best_score = step_best_score
                 best_X_val, best_y_val, best_pred = step_best_X_val, step_best_y_val, step_best_pred
+                score_history.append(best_score)
             else:
-                break  # 改善しなければ早期終了
-            score_history.append(best_score)
-            percent = int((i + 1) / max_iter_1 * 100)
-            hill_bar.progress(percent, text=f"進捗状況{percent}%")
+                break
 
         return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
 
-    step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5] 
+    def run_hill_climbing(step_size, gamma, coef0, C, datas, labels):
+        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
+            datas, labels, C, gamma, coef0, initial_weights, max_iter_1=30, step_size=step_size
+        )
+        return {
+            "step_size": step_size,
+            "gamma": gamma,
+            "coef0": coef0,
+            "C": C,
+            "score": score,
+            "weights": [float(f"{w:.2f}") for w in weights_change],
+            "score_history": score_history,
+            "X_val": X_val_tmp,
+            "y_val": y_val_tmp,
+            "pred": pred_tmp,
+        }
+
+    # === パラメータ設定 & 実行 ===
+    st.title("🧠 Hill Climbing × 並列探索（SVM最適化）")
+
+    step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5]
     C_values = [0.01, 0.1, 1]
     gamma_values = [0.01, 0.05, 0.1, 0.2, 0.5]
     coef0_values = [-5, -2, 0, 2, 5]
 
-    best_score = 0
-    best_C = None
-    best_gamma = None
-    best_coef0 = None
-    best_step_size = None
-    best_weights = None
-    best_X_val = best_y_val = best_pred = None
+    param_grid = [
+        (step_size, gamma, coef0, C)
+        for step_size in step_sizes
+        for gamma in gamma_values
+        for coef0 in coef0_values
+        for C in C_values
+    ]
+
     all_results = []
+    best_score = 0
+    best_result = None
 
-    for step_size in step_sizes:
-        for gamma in gamma_values:
-            for coef0 in coef0_values:
-                st.subheader(f"🔍 step_size = {step_size}, gamma = {gamma}, coef0 = {coef0} の結果")
-                # Cのグリッドサーチ（外側ループ）
-                for C in C_values:
-                    weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, gamma, coef0, max_iter_1=30, step_size=step_size)
+    st.write("🔁 並列実行中...")
 
-                    # 結果記録
-                    all_results.append({
-                        "step_size": step_size,
-                        "C": C,
-                        "gamma": gamma,
-                        "coef0": coef0,
-                        "score": score,
-                        "weights": str([f"{w:.2f}" for w in weights_change])
-                    })
+    start_time = time.time()
 
-                    st.write(f"→ C={C} で得られたスコア: {score:.4f}")
-                    # グラフ描画
-                    fig, ax = plt.subplots()
-                    ax.plot(range(len(score_history)), score_history)
-                    ax.set_title("Score progression by Hill Climbing")
-                    ax.set_xlabel("Step")
-                    ax.set_ylabel("Score")
-                    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-                    st.pyplot(fig)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [
+            executor.submit(run_hill_climbing, step_size, gamma, coef0, C, datas, labels)
+            for (step_size, gamma, coef0, C) in param_grid
+        ]
 
-                    if score > best_score:
-                        best_score = score
-                        best_C = C
-                        best_gamma = gamma
-                        best_coef0 = coef0
-                        best_step_size = step_size
-                        best_weights = weights_change
-                        best_X_val = X_val_tmp
-                        best_y_val = y_val_tmp
-                        best_pred = pred_tmp
+    results = [f.result() for f in futures]
 
-    results_df = pd.DataFrame(all_results)
-    st.subheader("📊 step_size × C × gamma × coef0 ごとのスコアまとめ")
-    st.dataframe(results_df.sort_values(by="score", ascending=False))
+    for result in results:
+        all_results.append(result)
 
-    # 最終モデルを学習＆保存
-    X_weighted_final = apply_weights(datas, best_weights)
-    final_model = SVC(C=best_C, kernel='sigmoid', max_iter=1500)
-    final_model.fit(X_weighted_final, labels)
-    joblib.dump(final_model, MODEL_PATH)
-
-    # データフレームを作成
-    # best_weights_df = pd.DataFrame(best_weights.astype(float),{"columns": stocks, "weights": best_weights})
-    best_weights_df = pd.DataFrame(best_weights.astype(float), index=stocks, columns=["Weight"])
-
-    # ✅ ここにスコア一覧表を表示
-    st.subheader("📊 step_size × C ごとのスコアまとめ")
-    results_df = pd.DataFrame([
-        {"step_size": r["step_size"], "C": r["C"], "score": r["score"]}
-        for r in all_results
-    ])
-    results_df["score"] = (results_df["score"] * 100).map(lambda x: f"{x:.2f}%")
-    st.dataframe(results_df)
+        if result["score"] > best_score:
+            best_score = result["score"]
+            best_result = result
 
     # 結果表示
-    st.write("✅ 最適なC:", best_C)
-    st.write("✅ 最適な重み:")
-    st.dataframe(best_weights_df)
-    st.write("✅ 最終スコア:", best_score)
+    results_df = pd.DataFrame([{
+        "step_size": r["step_size"],
+        "gamma": r["gamma"],
+        "coef0": r["coef0"],
+        "C": r["C"],
+        "score": r["score"],
+        "weights": r["weights"]
+    } for r in all_results])
 
-    # 感度と特異度の計算
-    conf_matrix = confusion_matrix(best_y_val, best_pred, labels=[1, 2, 3])
 
-    sensitivity_list = []
-    specificity_list = []
+    elapsed = time.time() - start_time
+    st.write(f"⏱ 実行時間: {elapsed:.2f} 秒")
 
-    n_classes = conf_matrix.shape[0]
-    
-    for i in range(n_classes):
-        TP = conf_matrix[i, i]
-        FN = np.sum(conf_matrix[i, :]) - TP
-        FP = np.sum(conf_matrix[:, i]) - TP
-        TN = np.sum(conf_matrix) - (TP + FN + FP)
+    st.subheader("📊 スコアまとめ")
+    st.dataframe(results_df.sort_values(by="score", ascending=False))
+
+    st.subheader("📊 一番良かったパラメータのスコア推移")
+
+    best_history = best_result["score_history"]
+
+    fig, ax = plt.subplots()
+    ax.plot(range(len(best_history)), best_history)
+    ax.set_title("Best Score Progression by Hill Climbing")
+    ax.set_xlabel("Step")
+    ax.set_ylabel("Score")
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+    st.pyplot(fig)
+
+    # モデル保存
+    if best_result:
+        X_weighted_final = apply_weights(datas, np.array(best_result["weights"]))
+        final_model = SVC(
+            C=best_result["C"],
+            kernel='sigmoid',
+            gamma=best_result["gamma"],
+            coef0=best_result["coef0"],
+            max_iter=1500
+        )
+        final_model.fit(X_weighted_final, labels)
+        joblib.dump(final_model, "final_model.joblib")
+        st.success("✅ 最終モデルを保存しました！")
+
+        # データフレームを作成
+        # best_weights_df = pd.DataFrame(best_weights.astype(float),{"columns": stocks, "weights": best_weights})
+        best_weights_df = pd.DataFrame(np.array(best_result["weights"]).astype(float), index=stocks, columns=["Weight"])
+
+        # ✅ ここにスコア一覧表を表示
+        st.subheader("📊 step_size × C ごとのスコアまとめ")
+        results_df = pd.DataFrame([
+            {"step_size": r["step_size"], "C": r["C"], "score": r["score"]}
+            for r in all_results
+        ])
+        results_df["score"] = (results_df["score"] * 100).map(lambda x: f"{x:.2f}%")
+        st.dataframe(results_df)
+
+        # 結果表示
+        st.write("✅ 最適なC:", best_result["C"])
+        st.write("✅ 最適な重み:")
+        st.dataframe(best_weights_df)
+        st.write("✅ 最終スコア:", best_score)
+
+        best_y_val = best_result["y_val"]
+        best_pred = best_result["pred"]
+
+        # 感度と特異度の計算
+        conf_matrix = confusion_matrix(best_y_val, best_pred, labels=[1, 2, 3])
+
+        sensitivity_list = []
+        specificity_list = []
+
+        n_classes = conf_matrix.shape[0]
         
-        sensitivity = TP / (TP + FN) if (TP + FN) != 0 else 0
-        specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
+        for i in range(n_classes):
+            TP = conf_matrix[i, i]
+            FN = np.sum(conf_matrix[i, :]) - TP
+            FP = np.sum(conf_matrix[:, i]) - TP
+            TN = np.sum(conf_matrix) - (TP + FN + FP)
+            
+            sensitivity = TP / (TP + FN) if (TP + FN) != 0 else 0
+            specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
 
-        sensitivity_list.append(sensitivity)
-        specificity_list.append(specificity)
+            sensitivity_list.append(sensitivity)
+            specificity_list.append(specificity)
 
-        st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")
+            st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")

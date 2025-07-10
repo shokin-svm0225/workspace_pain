@@ -608,7 +608,7 @@ if st.button("開始", help="実験の実行"):
         return datas * weights_change
 
     # 指定された重みで交差検証精度を返す関数
-    def evaluate(weights_change, datas, labels, C, k=5, return_best_split=False):
+    def evaluate(weights_change, datas, labels, C, gamma=0.1, coef0=0.0, degree=2, k=5, return_best_split=False):
         X_weighted = apply_weights(datas, weights_change)
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
         scores = []
@@ -620,7 +620,7 @@ if st.button("開始", help="実験の実行"):
             X_train, X_val = X_weighted[train_index], X_weighted[val_index]
             y_train, y_val = labels[train_index], labels[val_index]
 
-            model = SVC(C=C, kernel='linear', max_iter=1500)
+            model = SVC(C=C, kernel='poly', gamma=gamma, coef0=coef0, degree=degree, max_iter=1500)
             model.fit(X_train, y_train)
             y_pred = model.predict(X_val)
             acc = np.mean(y_pred == y_val)
@@ -639,14 +639,14 @@ if st.button("開始", help="実験の実行"):
             return np.mean(scores)
 
     # 山登り法（1つのCに対して最適な重みを探索）
-    def hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.01):
+    def hill_climbing(datas, labels, C, gamma, coef0, degree, max_iter_1=100, step_size=0.01):
         n_features = datas.shape[1]
         weights_change = np.ones(n_features)
         # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
         weights_change = weights_change.astype(float)
         st.write("✅ 初期重み:" + str([int(w) for w in weights_change]))
 
-        best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
+        best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, coef0, degree, return_best_split=True)
         best_weights = weights_change.copy()
 
 
@@ -671,7 +671,7 @@ if st.button("開始", help="実験の実行"):
                         X_val_tmp, y_val_tmp, pred_tmp = best_X_val, best_y_val, best_pred
                     else:
                         score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
-                            trial_weights, datas, labels, C, return_best_split=True
+                            trial_weights, datas, labels, C, gamma, coef0, degree, return_best_split=True
                         )
 
                     if score > step_best_score:
@@ -698,44 +698,68 @@ if st.button("開始", help="実験の実行"):
 
     step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5] 
     C_values = [0.01, 0.1, 1]
+    degree_values = [2, 3]
+    gamma_values = [0.01, 0.05, 0.1]
+    coef0_values = [3, 5, 8]
+
     best_score = 0
     best_C = None
+    best_gamma = None
+    best_coef0 = None
+    best_degree = None
     best_step_size = None
     best_weights = None
     best_X_val = best_y_val = best_pred = None
     all_results = []
 
     for step_size in step_sizes:
-        st.subheader(f"🔍 step_size = {step_size} の結果")
-        # Cのグリッドサーチ（外側ループ）
-        for C in C_values:
-            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=30, step_size=step_size)
+        for degree in degree_values:
+            for gamma in gamma_values:
+                for coef0 in coef0_values:
+                    st.subheader(f"🔍 step_size = {step_size}, degree = {degree}, gamma = {gamma}, coef0 = {coef0} の結果")
+                    # Cのグリッドサーチ（外側ループ）
+                    for C in C_values:
+                        weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, gamma, coef0, degree, max_iter_1=30, step_size=step_size)
 
-            # 結果記録
-            all_results.append({"step_size": step_size, "C": C, "score": score})
+                        # 結果記録
+                        all_results.append({
+                            "step_size": step_size,
+                            "C": C,
+                            "gamma": gamma,
+                            "coef0": coef0,
+                            "degree": degree,
+                            "score": score
+                        })
 
-            st.write(f"→ C={C} で得られたスコア: {score:.4f}")
-            # グラフ描画
-            fig, ax = plt.subplots()
-            ax.plot(range(len(score_history)), score_history)
-            ax.set_title("Score progression by Hill Climbing")
-            ax.set_xlabel("Step")
-            ax.set_ylabel("Score")
-            ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-            st.pyplot(fig)
+                        st.write(f"→ C={C} で得られたスコア: {score:.4f}")
+                        # グラフ描画
+                        fig, ax = plt.subplots()
+                        ax.plot(range(len(score_history)), score_history)
+                        ax.set_title("Score progression by Hill Climbing")
+                        ax.set_xlabel("Step")
+                        ax.set_ylabel("Score")
+                        ax.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+                        st.pyplot(fig)
 
-            if score > best_score:
-                best_score = score
-                best_C = C
-                best_step_size = step_size
-                best_weights = weights_change
-                best_X_val = X_val_tmp
-                best_y_val = y_val_tmp
-                best_pred = pred_tmp
+                        if score > best_score:
+                            best_score = score
+                            best_C = C
+                            best_gamma = gamma
+                            best_coef0 = coef0
+                            best_step_size = step_size
+                            best_degree = degree
+                            best_weights = weights_change
+                            best_X_val = X_val_tmp
+                            best_y_val = y_val_tmp
+                            best_pred = pred_tmp
+
+    results_df = pd.DataFrame(all_results)
+    st.subheader("📊 step_size × C × gamma × coef0 × degree ごとのスコアまとめ")
+    st.dataframe(results_df.sort_values(by="score", ascending=False))
 
     # 最終モデルを学習＆保存
     X_weighted_final = apply_weights(datas, best_weights)
-    final_model = SVC(C=best_C, kernel='linear', max_iter=1500)
+    final_model = SVC(C=best_C, kernel='poly', max_iter=1500)
     final_model.fit(X_weighted_final, labels)
     joblib.dump(final_model, MODEL_PATH)
 
