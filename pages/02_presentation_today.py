@@ -128,6 +128,21 @@ with st.container(border=True):
         """)
         st.markdown("- $\\gamma$: ガウス関数の幅（大きいほど“近い点”に鋭敏）")
         st.markdown("- $\\| x - y \\|^2$: ユークリッド距離の2乗")
+    
+    st.subheader("実験の概要④", divider='rainbow')
+    st.markdown("""
+    3つのクラス（侵害・神経・不明）のアンケートデータにおける各質問項目（P1〜D18）の点数ごとの回答数を棒グラフで可視化した
+    - 目的：クラス（侵害・神経・不明）ごとに多く現れる回答パターンや影響の大きい特徴量を見つけるため。
+    """)
+    img = Image.open('picture/20250711/回答分布.png')
+    st.image(img, use_container_width=True)
+    st.markdown("""
+    - 横軸：各質問項目に対するスコア、縦軸：回答人数
+    - 青：侵害受容性疼痛、水色：神経受容性疼痛、赤：不明 \n
+    → P8,P12は侵害受容性疼痛と神経障害性疼痛の患者を識別する重要な特徴量？重みを極端に変えたら結果も良くなる？
+    - P8：ピリピリしたり、チクチク刺したりするような感じ（虫が歩いているような、電気が流れているような感じ）がありますか？
+    - P12：痛みのある場所に、痺れを感じますか？
+    """)
 
 
 with st.container(border=True):
@@ -139,6 +154,9 @@ with st.container(border=True):
     img2 = Image.open('picture/20250711/FUSION.png')
     st.image(img1, caption='PainDITECT', use_container_width=True)
     st.image(img2, caption="FUSION", use_container_width=True)
+    st.markdown("""
+    - 正答率は変わらなかった
+    """)
 
     st.subheader("実験結果②", divider='rainbow')
     st.markdown("""
@@ -146,6 +164,9 @@ with st.container(border=True):
     """)
     img1 = Image.open('picture/20250711/更新幅.png')
     st.image(img1, caption='FUSION', use_container_width=True)
+    st.markdown("""
+    - P11であれば重みが上がったものもあれば、下がったものがあり、判断が難しい
+    """)
 
     st.subheader("実験結果③", divider='rainbow')
     st.markdown("""
@@ -182,6 +203,10 @@ with st.container(border=True):
     st.image(img1, caption='FUSION', use_container_width=True)
     st.image(img2, caption="BS-POP", use_container_width=True)
     st.image(img3, caption="PainDITECT", use_container_width=True)
+    st.markdown("""
+    - BS-POPの正答率で70%と今までと比較しても高く出た
+    - 変更重み（BS-POP）：D1,D2,D7,D10,D11
+    """)
 
     st.markdown("""
     - 補足
@@ -189,22 +214,12 @@ with st.container(border=True):
     img1 = Image.open('picture/20250711/標準化内積.png')
     st.image(img1, caption='標準化データの内積の分布', use_container_width=True)
 
-with st.container(border=True):
-    st.subheader("結果・考察", divider='rainbow')
-    st.markdown("""
-    - 精度としては以前とあまり変わらず、65%前後で落ち着いている
-    - 初期値や更新の大きさを変えてもどれも数回の試行でスコアが変わらなくなってしまった（特に[-ε,+ε]の2方向）
-      - 原因：交差検証のrandom_stateが固定されているため、少し重みをずらしてもスコアが変わらない・プログラムの間違い
-    - [-ε,+ε]の2方向の場合は、各ステップごとにベストスコアを評価し、必ず「どれか一番良い方向」に更新するため、変わらなくなるのはおかしい？
-    """)
 
 with st.container(border=True):
     st.subheader("今後の予定の確認", divider='rainbow')
     st.markdown("""
-    - 山登り法
-      - PainDITECTとFUSIONの質問表でも実装
-      - 試行回数を増やして実験
-      - 乱数の範囲を変えて実験
+    - クラスごとの点数の回答数を可視化した結果や今回の実験結果からP8を中心に他の重みの初期値を変えて実験する
+    - 他の欠損値補完での実験
+    - パラメータの探索範囲を細かくする
     - 遺伝的アルゴリズムによる重み付け
-    - 侵害需要性疼痛と診断されたデータと神経障害性疼痛と診断されたデータの回答傾向を可視化
     """)
