@@ -306,6 +306,7 @@ elif choice_1 == 'k-NN法補完' and choice_2 == 'FUSION' and choice_3 == '有':
     st.markdown('#### 原因不明')
     st.dataframe(df3)
 
+
 # 初期化
 if 'checkbox_states_1' not in st.session_state:
     st.session_state.checkbox_states_1 = {
@@ -316,15 +317,15 @@ if 'checkbox_states_1' not in st.session_state:
 if choice_2 in ["PainDITECT", "FUSION"]:
     st.header("使用するカラムの指定(PainDITECT)")
 
-# 全選択・全解除ボタン
-col_buttons = st.columns(2)
-if col_buttons[0].button('全選択', key='select_all_1'):
-    for key in st.session_state.checkbox_states_1:
-        st.session_state.checkbox_states_1[key] = True
+    # 全選択・全解除ボタン
+    col_buttons = st.columns(2)
+    if col_buttons[0].button('全選択', key='select_all_1'):
+        for key in st.session_state.checkbox_states_1:
+            st.session_state.checkbox_states_1[key] = True
 
-if col_buttons[1].button('全解除', key='deselect_all_1'):
-    for key in st.session_state.checkbox_states_1:
-        st.session_state.checkbox_states_1[key] = False
+    if col_buttons[1].button('全解除', key='deselect_all_1'):
+        for key in st.session_state.checkbox_states_1:
+            st.session_state.checkbox_states_1[key] = False
 
     # チェックボックスの表示（元のスタイルを維持）
     col_1 = st.columns(7)
@@ -495,6 +496,7 @@ if choice_2 in ["BS-POP", "FUSION"]:
     for i in range(1, 19):
         if st.session_state.get(f"D{i}", False):
             stocks.append(f"D{i}")
+
 
 weights = []
 
