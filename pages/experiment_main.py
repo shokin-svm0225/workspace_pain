@@ -1,7 +1,7 @@
 from importlib import import_module
 import streamlit as st
 
-choice = st.selectbox("どの実験？", ["山登り法3_線形カーネル", "山登り法2_線形カーネル","山登り法3_多項式カーネル", "山登り法2_多項式カーネル",
+choice = st.selectbox("どの実験？", ["山登り法3_線形カーネル", "山登り法2_線形カーネル","山登り法3_多項式カーネル", "山登り法2_多項式カーネル", "山登り法2_多項式カーネル2",
                                 "山登り法3_rbfカーネル", "山登り法2_rbfカーネル", "山登り法3_シグモイドカーネル", "山登り法2_シグモイドカーネル"])
 
 if choice == "山登り法3_線形カーネル":
@@ -16,6 +16,9 @@ elif choice == "山登り法3_多項式カーネル":
 elif choice == "山登り法2_多項式カーネル":
     module = import_module("experiment.secondshift_poly_experiment")
     module.run_secondshift_experiment()
+elif choice == "山登り法2_多項式カーネル2":
+    module = import_module("experiment.secondshift_poly_experiment2")
+    module.run_secondshift_experiment2()
 elif choice == "山登り法3_rbfカーネル":
     module = import_module("experiment.thirdshift_rbf_experiment")
     module.run_thirdshift_experiment()

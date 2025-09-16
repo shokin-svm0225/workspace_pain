@@ -16,7 +16,7 @@ with st.container(border=True):
     - 実験結果・考察
     - 今後の予定の確認
     - アドバイス
-    """)  
+    """)
         
 with st.container(border=True):
     st.subheader("実験の概要①", divider='rainbow')

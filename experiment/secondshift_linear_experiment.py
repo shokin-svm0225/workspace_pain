@@ -640,13 +640,14 @@ def run_secondshift_experiment():
                 return np.mean(scores)
 
         # 山登り法（1つのCに対して最適な重みを探索）
-        def hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1):
+        def hill_climbing(datas, labels, C, max_iter_1=1000, step_size=0.01):
             n_features = datas.shape[1]
             weights_change = np.ones(n_features).astype(float)
             # weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
             st.write("✅ 初期重み:" + str([int(w) for w in weights_change]))
 
-            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, return_best_split=True)
+            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C
+            , return_best_split=True)
             best_weights = weights_change.copy()
 
 
@@ -687,9 +688,9 @@ def run_secondshift_experiment():
                 percent = int((i + 1) / max_iter_1 * 100)
                 hill_bar.progress(percent, text=f"進捗状況{percent}%")
 
-            return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
+            return best_weights, max(score_history), best_X_val, best_y_val, best_pred, score_history
 
-        C_values = [0.01, 0.1, 1]
+        C_values = [1, 0.1]
         best_score = 0
         best_C = None
         best_weights = None
@@ -697,7 +698,7 @@ def run_secondshift_experiment():
 
         # Cのグリッドサーチ（外側ループ）
         for C in C_values:
-            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=100, step_size=0.1)
+            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(datas, labels, C, max_iter_1=1000, step_size=0.01)
             st.write(f"→ C={C} で得られたスコア: {score:.4f}")
             # グラフ描画
             fig, ax = plt.subplots()

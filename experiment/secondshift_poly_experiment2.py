@@ -27,7 +27,7 @@ import random
 
 MODEL_PATH = "svm_model.pkl"
 
-def run_secondshift_experiment():
+def run_secondshift_experiment2():
     st.title('実験')
 
     with st.container(border=True):
@@ -639,34 +639,55 @@ def run_secondshift_experiment():
             else:
                 return np.mean(scores)
 
-        def hill_climbing(datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=30, step_size=0.01):
+        def hill_climbing(datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=1000, step_size=0.01):
             n_features = datas.shape[1]
             # weights_change = np.ones(n_features).astype(float)
             weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
 
-            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, coef0, degree, return_best_split=True)
+            st.write("✅ 初期重み:" + str([int(w) for w in weights_change]))
+
+            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, coef0, degree, k=5, return_best_split=True)
             best_weights = weights_change.copy()
             score_history = [best_score]
+
+            # ★ 追加: 返却用のグローバルベスト（重み・スコア・付随情報）を初期化
+            global_best_score = -np.inf
+            global_best_weights = None
+            global_best_pack = (None, None, None)
 
             for i in range(max_iter_1):
                 step_best_score = -np.inf 
                 candidates = [] 
+
+                trial_configs = []
 
                 for idx in range(n_features):
                     for delta in [-step_size, step_size]:
                         trial_weights = weights_change.copy()
                         trial_weights = trial_weights.astype(float)
                         trial_weights[idx] += delta
+                        trial_configs.append((trial_weights, idx, delta))
 
-                        score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
-                            trial_weights, datas, labels, C, gamma, coef0, degree, return_best_split=True
-                        )
+                # === 並列で評価を実行 ===
+                with ThreadPoolExecutor(max_workers=4) as executor:
+                    futures = [
+                        executor.submit(evaluate, tw, datas, labels, C, gamma, coef0, degree, k=5, return_best_split=True)
+                        for tw, _, _ in trial_configs
+                    ]
+                    results = [f.result() for f in futures]
+
+                for i in range(len(trial_configs)):
+                    config = trial_configs[i]
+                    result = results[i]
+
+                    trial_weights, _, _ = config
+                    score, X_val_tmp, y_val_tmp, pred_tmp = result
 
                     if score > step_best_score:
                         step_best_score = score
-                        candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]  # 🔄 新しく記録
+                        candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]
                     elif score == step_best_score:
-                        candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)) 
+                        candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp))
 
                 # ✅ スコアが同じ候補からランダムに1つを選ぶ
                 selected_weights, selected_X_val, selected_y_val, selected_pred = random.choice(candidates)
@@ -676,11 +697,20 @@ def run_secondshift_experiment():
                 best_X_val, best_y_val, best_pred = selected_X_val, selected_y_val, selected_pred
                 score_history.append(best_score)
 
-            return best_weights, max(score_history), best_X_val, best_y_val, best_pred, score_history
+                # ★ 追加: グローバルベストを改善時のみ更新（返却の整合性用）
+                if best_score >= global_best_score:
+                    global_best_score = best_score
+                    global_best_weights = best_weights.copy()
+                    global_best_pack = (best_X_val, best_y_val, best_pred)
+
+            # ★ 変更: 返り値は“グローバルベスト”に統一（max(score_history) は使わない）
+            return global_best_weights, global_best_score, global_best_pack[0], global_best_pack[1], global_best_pack[2], score_history
+
+            # return best_weights, max(score_history), best_X_val, best_y_val, best_pred, score_history
 
         def run_hill_climbing(step_size, gamma, coef0, degree, C, datas, labels):
-            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
-                datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=30, step_size=step_size
+            weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
+                datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=1000, step_size=step_size
             )
             return {
                 "step_size": step_size,
@@ -689,7 +719,9 @@ def run_secondshift_experiment():
                 "degree": degree,
                 "C": C,
                 "score": score,
-                "weights": [float(f"{w:.2f}") for w in weights_change],
+                # "weights": [float(f"{w:.2f}") for w in weights_change],
+                "weights": [float(f"{w:.2f}") for w in weights_best],      # 表示用に丸めた“最大スコア時点の重み”
+                "weights_raw": np.asarray(weights_best, dtype=float).tolist(), 
                 "score_history": score_history,
                 "X_val": X_val_tmp,
                 "y_val": y_val_tmp,
@@ -699,9 +731,19 @@ def run_secondshift_experiment():
         # === パラメータ設定 & 実行 ===
         st.title("🧠 Hill Climbing × 並列探索（SVM最適化）")
 
-        step_sizes = [0.1, 0.3, 0.5]
-        C_values = [0.01, 0.1, 1]
-        gamma_values = [0.05, 0.1]
+        # ここで初期重みを一度だけ表示（共通の初期重みの場合）
+        w0 = np.asarray(initial_weights, dtype=float)
+        init_df = pd.DataFrame({
+            "Feature": stocks,                 # 例: 質問項目名
+            "InitialWeight": w0,               # 元の値（float）
+            "InitialWeight(int)": w0.astype(int)  # 表示用に整数も併記
+        })
+        st.subheader("✅ 初期重み")
+        st.dataframe(init_df)
+
+        step_sizes = [0.01]
+        C_values = [0.01,0.1]
+        gamma_values = [0.05, 0.01]
         coef0_values = [3, 5, 8]
         degree_values = [2, 3]
 

@@ -22,6 +22,7 @@ import joblib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 import random
 
@@ -638,35 +639,53 @@ def run_secondshift_experiment():
                 return np.mean(scores), best_X_val, best_y_val, best_pred
             else:
                 return np.mean(scores)
-
-        def hill_climbing(datas, labels, C, gamma, initial_weights, max_iter_1=30, step_size=0.01):
+            
+        def hill_climbing(datas, labels, C, gamma, initial_weights, max_iter_1=1000, step_size=0.01):
             n_features = datas.shape[1]
             # weights_change = np.ones(n_features).astype(float)
             weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
 
-            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, return_best_split=True)
+            best_score, best_X_val, best_y_val, best_pred = evaluate(weights_change, datas, labels, C, gamma, k=5, return_best_split=True)
             best_weights = weights_change.copy()
             score_history = [best_score]
+
+            global_best_score = -np.inf
+            global_best_weights = None
+            global_best_pack = (None, None, None)
 
             for i in range(max_iter_1):
                 step_best_score = -np.inf 
                 candidates = [] 
+
+                trial_configs = []
 
                 for idx in range(n_features):
                     for delta in [-step_size, step_size]:
                         trial_weights = weights_change.copy()
                         trial_weights = trial_weights.astype(float)
                         trial_weights[idx] += delta
+                        trial_configs.append((trial_weights, idx, delta))
 
-                        score, X_val_tmp, y_val_tmp, pred_tmp = evaluate(
-                            trial_weights, datas, labels, C, gamma, return_best_split=True
-                        )
+                # === 並列で評価を実行 ===
+                with ThreadPoolExecutor(max_workers=4) as executor:
+                    futures = [
+                        executor.submit(evaluate, tw, datas, labels, C, gamma, k=5, return_best_split=True)
+                        for tw, _, _ in trial_configs
+                    ]
+                    results = [f.result() for f in futures]
+
+                for i in range(len(trial_configs)):
+                    config = trial_configs[i]
+                    result = results[i]
+
+                    trial_weights, _, _ = config
+                    score, X_val_tmp, y_val_tmp, pred_tmp = result
 
                     if score > step_best_score:
                         step_best_score = score
-                        candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]  # 🔄 新しく記録
+                        candidates = [(trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)]
                     elif score == step_best_score:
-                        candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp)) 
+                        candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp))
 
                 # ✅ スコアが同じ候補からランダムに1つを選ぶ
                 selected_weights, selected_X_val, selected_y_val, selected_pred = random.choice(candidates)
@@ -676,18 +695,27 @@ def run_secondshift_experiment():
                 best_X_val, best_y_val, best_pred = selected_X_val, selected_y_val, selected_pred
                 score_history.append(best_score)
 
-            return best_weights, best_score, best_X_val, best_y_val, best_pred, score_history
+                # ★ 追加: グローバルベストを改善時のみ更新（返却の整合性用）
+                if best_score >= global_best_score:
+                    global_best_score = best_score
+                    global_best_weights = best_weights.copy()
+                    global_best_pack = (best_X_val, best_y_val, best_pred)
+
+            # ★ 変更: 返り値は“グローバルベスト”に統一（max(score_history) は使わない）
+            return global_best_weights, global_best_score, global_best_pack[0], global_best_pack[1], global_best_pack[2], score_history
 
         def run_hill_climbing(step_size, gamma, C, datas, labels):
-            weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
-                datas, labels, C, gamma, max_iter_1=30, step_size=step_size
+            weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
+                datas, labels, C, gamma, initial_weights, max_iter_1=1000, step_size=step_size
             )
             return {
                 "step_size": step_size,
                 "gamma": gamma,
                 "C": C,
                 "score": score,
-                "weights": [float(f"{w:.2f}") for w in weights_change],
+                # "weights": [float(f"{w:.2f}") for w in weights_change],
+                "weights": [float(f"{w:.2f}") for w in weights_best],      # 表示用に丸めた“最大スコア時点の重み”
+                "weights_raw": np.asarray(weights_best, dtype=float).tolist(), 
                 "score_history": score_history,
                 "X_val": X_val_tmp,
                 "y_val": y_val_tmp,
@@ -697,9 +725,19 @@ def run_secondshift_experiment():
         # === パラメータ設定 & 実行 ===
         st.title("🧠 Hill Climbing × 並列探索（SVM最適化）")
 
-        step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5]
-        C_values = [0.01, 0.1, 1]
-        gamma_values = [0.01, 0.05, 0.1, 1, 10]
+        # ここで初期重みを一度だけ表示（共通の初期重みの場合）
+        w0 = np.asarray(initial_weights, dtype=float)
+        init_df = pd.DataFrame({
+            "Feature": stocks,                 # 例: 質問項目名
+            "InitialWeight": w0,               # 元の値（float）
+            "InitialWeight(int)": w0.astype(int)  # 表示用に整数も併記
+        })
+        st.subheader("✅ 初期重み")
+        st.dataframe(init_df)
+
+        step_sizes = [0.01]
+        C_values = [0.1, 1]
+        gamma_values = [0.01, 0.05]
 
         param_grid = [
             (step_size, gamma, C)
@@ -717,19 +755,30 @@ def run_secondshift_experiment():
         start_time = time.time()
 
         with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = [
-                executor.submit(run_hill_climbing, step_size, gamma, C, datas, labels)
+            futures = {
+                executor.submit(run_hill_climbing, step_size, gamma, C, datas, labels):
+                (step_size, gamma, C)
                 for (step_size, gamma, C) in param_grid
-            ]
+            }
+            total_jobs = len(futures)
 
-        results = [f.result() for f in futures]
+            done = 0
+            progress_bar = st.progress(0)
+            progress_text = st.empty()
 
-        for result in results:
-            all_results.append(result)
+            for future in as_completed(futures):
+                result = future.result()
+                all_results.append(result)
 
-            if result["score"] > best_score:
-                best_score = result["score"]
-                best_result = result
+                if result["score"] > best_score:
+                    best_score = result["score"]
+                    best_result = result
+
+                # ✅ 進捗バー更新
+                done += 1
+                percent = int(done / total_jobs * 100)
+                progress_bar.progress(percent, text=f"進捗状況 {done}/{total_jobs}（{percent}％）")
+                progress_text.text(f"進捗状況 {done}/{total_jobs}")
 
         # 結果表示
         results_df = pd.DataFrame([{
