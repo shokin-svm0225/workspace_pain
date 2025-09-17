@@ -744,7 +744,7 @@ def run_secondshift_experiment2():
         step_sizes = [0.01]
         C_values = [0.01,0.1]
         gamma_values = [0.05, 0.01]
-        coef0_values = [3, 5, 8]
+        coef0_values = [2, 3, 5, 8]
         degree_values = [2, 3]
 
         param_grid = [

@@ -635,7 +635,7 @@ def run_secondshift_experiment():
             else:
                 return np.mean(scores)
 
-        def hill_climbing(datas, labels, C, gamma, coef0, initial_weights, max_iter_1=30, step_size=0.01):
+        def hill_climbing(datas, labels, C, gamma, coef0, initial_weights, max_iter_1=1000, step_size=0.01):
             n_features = datas.shape[1]
             # weights_change = np.ones(n_features).astype(float)
             weights_change = initial_weights.copy()  # 外から渡された固定の初期重み
@@ -700,7 +700,7 @@ def run_secondshift_experiment():
 
         def run_hill_climbing(step_size, gamma, coef0, C, datas, labels):
             weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
-                datas, labels, C, gamma, coef0, initial_weights, max_iter_1=30, step_size=step_size
+                datas, labels, C, gamma, coef0, initial_weights, max_iter_1=1000, step_size=step_size
             )
             return {
                 "step_size": step_size,
@@ -730,10 +730,10 @@ def run_secondshift_experiment():
         st.subheader("✅ 初期重み")
         st.dataframe(init_df)
 
-        step_sizes = [0.1, 0.2, 0.3, 0.4, 0.5]
-        C_values = [0.01, 0.1, 1]
-        gamma_values = [0.01, 0.05, 0.1, 0.2, 0.5]
-        coef0_values = [-5, -2, 0, 2, 5]
+        step_sizes = [0.01]
+        C_values = [0.1, 1]
+        gamma_values = [0.01, 0.05, 0.1, 0.5]
+        coef0_values = [-5, -2, 0, 2]
 
         param_grid = [
             (step_size, gamma, coef0, C)
