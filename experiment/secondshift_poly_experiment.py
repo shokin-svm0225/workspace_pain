@@ -680,7 +680,7 @@ def run_secondshift_experiment():
 
         def run_hill_climbing(step_size, gamma, coef0, degree, C, datas, labels):
             weights_change, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing(
-                datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=30, step_size=step_size
+                datas, labels, C, gamma, coef0, degree, initial_weights, max_iter_1=1000, step_size=step_size
             )
             return {
                 "step_size": step_size,
