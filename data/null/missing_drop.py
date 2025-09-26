@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/pain_experiment/データ/MedicalData_columns_change.csv')
+df1 = pd.read_csv('/Users/iwasho_0225/Desktop/workspace/workspace_pain/data2/data_main/MedicalData.csv')
 
 #'#REF!'という値をnp.nan（欠損値）に置き換え,欠損値を含む行を削除
 df1 = df1.replace('#REF!', np.nan).dropna()
@@ -16,4 +16,4 @@ imputed_data = np.round(number_data).astype(int)
 df1[number_data.columns] = imputed_data
 
 #結果を指定の新しいCSVファイルに保存
-df1.to_csv('questionnaire_fusion_missing.csv', index=False)
+df1.to_csv('questionnaire_fusion_missing_sum.csv', index=False)
