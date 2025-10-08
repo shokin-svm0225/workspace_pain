@@ -580,8 +580,8 @@ if st.button("開始", help="実験の実行"):
         datas = scaler.fit_transform(datas)
 
     # パラメータの候補を設定
-    # gamma_values = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000,10000] 
-    C_values = [1,0.1] # 0.0001から10000までの範囲、ステップ幅1
+    C_values = [0.1, 1]
+    gamma_values = [0.01, 0.05]
     k = 5
     best_score = 0
     best_params = None
@@ -589,31 +589,32 @@ if st.button("開始", help="実験の実行"):
     skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=None)
 
     for C in C_values:
-        scores = []
+        for gamma in gamma_values:
+            scores = []
 
-        for train_index, val_index in skf.split(datas, labels):
+            for train_index, val_index in skf.split(datas, labels):
 
-            X_train, X_val = datas[train_index], datas[val_index]
-            y_train, y_val = labels[train_index], labels[val_index]
+                X_train, X_val = datas[train_index], datas[val_index]
+                y_train, y_val = labels[train_index], labels[val_index]
 
-            svm = SVC(C=C, kernel='linear', max_iter=1500)
-            svm.fit(X_train, y_train)# トレーニング
+                svm = SVC(C=C, kernel='rbf', gamma=gamma, max_iter=1500)
+                svm.fit(X_train, y_train)# トレーニング
 
-            # バリデーションデータで評価
-            predicted = svm.predict(X_val)
-            score = np.mean(y_val == predicted)
-            scores.append(score)
+                # バリデーションデータで評価
+                predicted = svm.predict(X_val)
+                score = np.mean(y_val == predicted)
+                scores.append(score)
 
-        avg_score = np.mean(scores)
-        st.write(f"C: {C}, Score: {avg_score:.4f}")
+            avg_score = np.mean(scores)
+            st.write(f"C: {C}, gamma: {gamma}, Score: {avg_score:.4f}")
 
-        if avg_score > best_score:
-            best_score = avg_score
-            best_params = {"C": C}
-            best_model = svm
+            if avg_score > best_score:
+                best_score = avg_score
+                best_params = {"C": C, "gamma": gamma}
+                best_model = svm
 
-        # モデル保存
-        joblib.dump(best_model, MODEL_PATH)
+    # モデル保存
+    joblib.dump(best_model, MODEL_PATH)
 
     st.write("最適なパラメータ:", best_params)
     st.write("最高スコア:", best_score)

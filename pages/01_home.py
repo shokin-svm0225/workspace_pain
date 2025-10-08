@@ -17,7 +17,7 @@ from sklearn.linear_model import LinearRegression
 from streamlit_option_menu import option_menu
 
 # ラジオボタンを表示
-home_type = st.sidebar.radio("選んでください", ["研究概要", "辞書", "自己紹介"])
+home_type = st.sidebar.radio("選んでください", ["研究概要","学術講演会", "辞書", "自己紹介"])
 
 if home_type == "研究概要":
     st.title('ホーム')
@@ -89,6 +89,13 @@ if home_type == "研究概要":
     st.write("- 20241102 : 今まで利用したCSVファイルのカラムを統一にしました")
     st.write("- 20241106 : 各質問項目における相関係数の出力をしました")
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
+
+elif home_type == "学術講演会":
+    st.subheader('学術講演会-予稿', divider='rainbow')
+    img = Image.open('picture/home/学術講演会予稿1.png')
+    st.image(img, use_container_width=True)
+    img = Image.open('picture/home/学術講演会予稿2.png')
+    st.image(img, use_container_width=True)
 
 elif home_type == "辞書":
     with st.container(border=True):
