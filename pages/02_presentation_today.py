@@ -3,23 +3,64 @@ import itertools
 import plotly.express as px
 import pandas as pd
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFile
 from streamlit_option_menu import option_menu
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 st.title('本日の発表内容')
 
 with st.container(border=True):
     st.subheader("アジェンダ", divider='rainbow')
     st.markdown("""
-    - 前回の内容
-    - 実験の概要
-    - 実験結果・考察
+    - 研究内容
+    - 中間発表予稿の内容
+    - 主成分分析
     - 今後の予定の確認
     - アドバイス
     """)
+
+with st.container(border=True):
+    st.subheader("中間発表予稿の内容", divider='rainbow')
+    st.markdown("""
+    - 実験概要
+      - 質問表：PainDETECT(質問項目:13)，BS-POP(質問項目:18)，及び両者を結合したFUSION(質問項目:31)
+      - PainDETECTスコア総和による判定：正答率は55.4%，感度/特異度は侵害受容性疼痛 80.1%/38.8%，神経障害性疼痛 15.3%/94.2%，原因不明 21.9%/81.9%
+      参考文献：https://mhlw-grants.niph.go.jp/system/files/2013/133141/201323002A/201323002A0011.pdf
+      - 特徴量エンジニアリング：欠損値削除、平均 0・分散 1に標準化
+      - 分類モデル：SVM
+      - カーネル：線形カーネル，多項式カーネル，ガウスカーネル，シグモイドカーネル
+      - 性能評価：5分割交差検証
+      - パラメータチューニング（C,γ,d,c）：グリッドサーチ（探索回数：1000回）
+      - 各特徴量に対して重み付け (x′ = α × x )：山登り法（初期値：1，ステップ幅：0.01，反復回数：1000).
+    - 結果・考察
+      - 機械学習モデルとして SVM を用いることで，PainDETECT のスコア総和による判定より高精度になることがわかる．特に，神経障害性疼痛の感度が約15%から約50%近く向上させることができた．
+      - 標準SVMに対して質問項目別の重み付けを導入し山登り法で最適化することで，小幅ながら一貫した精度向上が確認できた．
+      - クラス別の結果を見ると，侵害受容性疼痛の感度は高いが，神経障害性疼痛の感度が相対的に低いことから，これが正答率に影響している可能性がある．
+    """)
+    img4 = Image.open('picture/20251017/hillcliming_score.png')
+    st.image(img4, caption='表1', width="stretch")
+    st.markdown("""
+    - 表2
+      - 初期値：①全て1(Linearだけ-step_size：0.1、その他-step_size：0.01)、②ランダム(-5〜5)(step_size：0.01)、③全て1(step_size：0.01)
+    """)
+   # タブの作成
+    tab1, tab2, tab3 = st.tabs(["PainDETECT", "BS-POP", "FUSION"])
+    # 各タブに内容を追加
+    with tab1:
+      img1 = Image.open('picture/20251017/20251017_PAINDETECT.png')
+      st.image(img1, width="stretch")
+
+    with tab2:
+      img2 = Image.open('picture/20251017/20251017_BSPOP.png')
+      st.image(img2, width="stretch")
+
+    with tab3:
+      img3 = Image.open('picture/20251017/20251017_FUSION.png')
+      st.image(img3, width="stretch")
+
         
 with st.container(border=True):
-    st.subheader("実験の概要①", divider='rainbow')
+    st.subheader("主成分分析", divider='rainbow')
     st.markdown("""
         各質問項目に対して適切な重み付けを山登り法で行う  \n
         - 各ステップで特徴量すべてに対して[-ε,0,+ε]の3方向で評価、重みの更新を行う

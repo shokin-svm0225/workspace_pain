@@ -10,7 +10,7 @@ from streamlit_option_menu import option_menu
 st.title('発表履歴')
 
 #データの加工方法の指定
-options = ['2024年11月8日', '2024年11月22日', '2024年12月13日', '2025年1月24日', '2025年4月25日', '2025年5月23日', '2025年6月13日', '2025年7月11日', '2025年9月19日']
+options = ['2024年11月8日', '2024年11月22日', '2024年12月13日', '2025年1月24日', '2025年4月25日', '2025年5月23日', '2025年6月13日', '2025年7月11日', '2025年10月17日']
 
 # セレクトボックスを作成し、ユーザーの選択を取得
 data_processing = st.sidebar.selectbox('日程を選択してください', options, index = None, placeholder="選択してください")
@@ -1044,7 +1044,7 @@ elif data_processing == "2025年7月11日":
         - 遺伝的アルゴリズムによる重み付け
         """)
 
-elif data_processing == "2025年9月19日":
+elif data_processing == "2025年10月17日":
     st.subheader('何やってるんですか、勉強してください', divider='rainbow')
     gif_path = "picture/kounogento.gif"
     st.image(gif_path,caption="河野玄斗")

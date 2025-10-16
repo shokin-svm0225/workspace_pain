@@ -13,13 +13,23 @@ st.title('データセット')
 home_type = st.sidebar.radio("選んでください", ["生データ", "欠損値削除", "中央値補完", "平均値補完", "k-NN法補完"])
 
 if home_type == "生データ":
-    st.subheader('生データ', divider='rainbow')
-    df1 = pd.read_csv("data2/data_main/MedicalData_columns_change.csv", encoding = 'utf-8')
+    st.subheader('生データ(合計あり)', divider='rainbow')
+    df1 = pd.read_csv("data2/data_main/MedicalData.csv", encoding = 'utf-8')
     st.dataframe(df1)
     csv = df1.to_csv(index=False).encode('utf-8')
     st.download_button(
     label="ダウンロード",
     data=csv,
+    file_name='MedicalData.csv',
+    mime='text/csv',
+    )
+    st.subheader('生データ(合計なし)', divider='rainbow')
+    df2 = pd.read_csv("data2/data_main/MedicalData_columns_change.csv", encoding = 'utf-8')
+    st.dataframe(df2)
+    csv2 = df2.to_csv(index=False).encode('utf-8')
+    st.download_button(
+    label="ダウンロード",
+    data=csv2,
     file_name='MedicalData_columns_change.csv',
     mime='text/csv',
     )

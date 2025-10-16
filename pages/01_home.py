@@ -91,6 +91,7 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "学術講演会":
+    # st.pdf("/Users/iwasho_0225/Desktop/workspace/workspace_pain/picture/gakujutu_streamlit.pdf")
     st.subheader('学術講演会-予稿', divider='rainbow')
     img = Image.open('picture/home/学術講演会予稿1.png')
     st.image(img, use_container_width=True)
