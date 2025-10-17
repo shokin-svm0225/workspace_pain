@@ -47,7 +47,7 @@ def show_pca_analysis(df, start_col='P1', end_col='D13', pain_col=None):
 
     # ==== PCA ====
     st.subheader("PCA実施")
-    max_n = min(20, X.shape[1])  # 主成分の最大数（必要なら増やしてOK）
+    max_n = min(30, X.shape[1])  # 主成分の最大数（必要なら増やしてOK）
     n_components = st.slider("主成分数 (n_components)", min_value=2, max_value=max_n, value=min(15, max_n), step=1)
 
     pca = PCA(n_components=n_components)
@@ -67,7 +67,7 @@ def show_pca_analysis(df, start_col='P1', end_col='D13', pain_col=None):
     # ==== 散布図（任意の2主成分を比較） ====
     st.subheader("PCA スコア散布図")
     st.markdown("""
-    - ⚫︎：侵害受容性疼痛(neuropathic)
+    - ⚫︎：侵害受容性疼痛(nociceptive)
     - ▲：神経障害性疼痛(neuropathic)
     - ◼︎：不明(unknown)
     """)
@@ -82,7 +82,7 @@ def show_pca_analysis(df, start_col='P1', end_col='D13', pain_col=None):
     mask_other = ~(mask_noci | mask_neur)
 
     fig3, ax3 = plt.subplots(figsize=(8, 6))
-    ax3.scatter(X_pca[mask_noci, pc_x], X_pca[mask_noci, pc_y], label="neuropathic", alpha=0.8, marker='o')
+    ax3.scatter(X_pca[mask_noci, pc_x], X_pca[mask_noci, pc_y], label="nociceptive", alpha=0.8, marker='o')
     ax3.scatter(X_pca[mask_neur, pc_x], X_pca[mask_neur, pc_y], label="neuropathic", alpha=0.8, marker='^')
     ax3.scatter(X_pca[mask_other, pc_x], X_pca[mask_other, pc_y], label="unknown", alpha=0.6, marker='s')
     ax3.set_xlabel(pc_x_name)

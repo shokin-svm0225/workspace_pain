@@ -46,7 +46,7 @@ with st.container(border=True):
         重み = [1, 1, 1, 1, 1]   ← 初期状態  
         ↓  
         各特徴量について  
-            重み + [-ε, 0, +ε](delta) の3通りを試す  
+            重み + [-ε, +ε](delta) の2通りを試す  
             ・delta = 0 のときは評価せず、今のベストスコアを使う  
             → スコアが最も良い重みを記録  
         ↓  
@@ -71,12 +71,12 @@ if choice_1 == '欠損値データ削除' and choice_2 == 'PainDITECT':
     df1 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing.csv', encoding = 'utf-8')
     st.markdown('#### データ')
     st.dataframe(df1)
-    X_cols = df1.loc[:, "P1":"D13"].columns.tolist()
+    X_cols = df1.loc[:, "P1":"P13"].columns.tolist()
     X = df1[X_cols].copy()
     pain_col = df1.columns[1]
 
 elif choice_1 == '欠損値データ削除' and choice_2 == 'BS-POP':
-    df1 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing_侵害.csv', encoding = 'utf-8')
+    df1 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing.csv', encoding = 'utf-8')
     st.markdown('#### データ')
     st.dataframe(df1)
     X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
@@ -231,11 +231,11 @@ if choice_4 == "する":
     X_scaled = scaler.fit_transform(X)
 
 # --- 4) PCA（主成分数を指定：例 3つ） ---
-pca = PCA(n_components=3)
+pca = PCA(n_components=22)
 X_pca = pca.fit_transform(X_scaled)
 
 # --- 5) PCA結果をデータフレーム化 ---
-pca_cols = [f"PCA{i+1}" for i in range(3)]
+pca_cols = [f"PCA{i+1}" for i in range(22)]
 df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
 
 # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
