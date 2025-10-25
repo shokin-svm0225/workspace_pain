@@ -117,6 +117,10 @@ home_type = st.sidebar.radio("選んでください", ["データ分布", "デ�
 if home_type == "データ分布":
     # セレクトボックスを作成し、ユーザーの選択を取得
     choice_1 = st.selectbox('データ分布', options, index = None, placeholder="選択してください")
+    if choice_1 is None:
+        st.info("データ分布の種類を選んでください。")
+        st.stop()
+    
     if choice_1 == '欠損値データ削除':
         df1 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_侵害.csv')
         df2 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_神経.csv')

@@ -1,33 +1,22 @@
 from importlib import import_module
 import streamlit as st
 
-choice = st.selectbox("どの実験？", ["山登り法3_線形カーネル", "山登り法2_線形カーネル","山登り法3_多項式カーネル", "山登り法2_多項式カーネル", "山登り法2_多項式カーネル2",
-                                "山登り法3_rbfカーネル", "山登り法2_rbfカーネル", "山登り法3_シグモイドカーネル", "山登り法2_シグモイドカーネル"])
+st.title('実験')
 
-if choice == "山登り法3_線形カーネル":
-    module = import_module("experiment.thirdshift_linear_experiment")  # ✅ ドット記法
-    module.run_thirdshift_experiment()
-elif choice == "山登り法2_線形カーネル":
-    module = import_module("experiment.secondshift_linear_experiment")
-    module.run_secondshift_experiment()
-elif choice == "山登り法3_多項式カーネル":
+st.sidebar.header("実行方法の選択")
+howto = st.sidebar.radio("実行方法", ["デフォルト", "山登り法"], index=0)
+
+choice = st.sidebar.radio("PCAの有無", ["有", "無"], index=1)
+
+if howto == "デフォルト" and choice == "有":
+    module = import_module("experiment.shift_experiment")  # ✅ ドット記法
+    module.run_shift_experiment()
+elif howto == "デフォルト" and choice == "無":
+    module = import_module("experiment.experiment_default")
+    module.default_experiment()
+elif howto == "山登り法" and choice == "有":
     module = import_module("experiment.thirdshift_poly_experiment") 
     module.run_thirdshift_experiment()
-elif choice == "山登り法2_多項式カーネル":
-    module = import_module("experiment.secondshift_poly_experiment")
-    module.run_secondshift_experiment()
-elif choice == "山登り法2_多項式カーネル2":
-    module = import_module("experiment.secondshift_poly_experiment2")
-    module.run_secondshift_experiment2()
-elif choice == "山登り法3_rbfカーネル":
-    module = import_module("experiment.thirdshift_rbf_experiment")
-    module.run_thirdshift_experiment()
-elif choice == "山登り法2_rbfカーネル":
-    module = import_module("experiment.secondshift_rbf_experiment")
-    module.run_secondshift_experiment()
-elif choice == "山登り法3_シグモイドカーネル":
-    module = import_module("experiment.thirdshift_sigmoid_experiment")
-    module.run_thirdshift_experiment()
-elif choice == "山登り法2_シグモイドカーネル":
-    module = import_module("experiment.secondshift_sigmoid_experiment")
-    module.run_secondshift_experiment()
+elif howto == "山登り法" and choice == "無":
+    module = import_module("experiment.shift_experiment")  # ✅ ドット記法
+    module.run_shift_experiment()

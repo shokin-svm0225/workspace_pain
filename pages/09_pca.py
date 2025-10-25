@@ -55,6 +55,18 @@ with st.container(border=True):
         これを max_iter 回繰り返す
         """, language="text")
 
+st.sidebar.header("最適化の設定")
+# 主成分数をスライダーで指定
+n_components = st.sidebar.slider(
+    "主成分数 (n_components)",
+    min_value=2,
+    max_value=20,     # ここは自動的に列数でもOKに変更可
+    value=5,
+    step=1
+)
+
+st.sidebar.header("データセット設定")
+
 # セレクトボックスのオプションを定義
 options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-NN法補完']
 
@@ -224,6 +236,8 @@ options = ['欠損値削除', '中央値補完', '平均値補完', 'k-NN法補�
 # セレクトボックスを作成し、ユーザーの選択を取得
 data_processing = st.sidebar.selectbox('欠損値補完の方法は？', options, index = None, placeholder="選択してください")
 
+X_scaled = None
+feature_names = []
 
 # 標準化の処理（必要に応じて）
 if choice_4 == "する":
@@ -231,17 +245,33 @@ if choice_4 == "する":
     X_scaled = scaler.fit_transform(X)
 
 # --- 4) PCA（主成分数を指定：例 3つ） ---
-pca = PCA(n_components=22)
-X_pca = pca.fit_transform(X_scaled)
+pca = PCA(n_components)
+# X_pca = pca.fit_transform(X_scaled)
 
-# --- 5) PCA結果をデータフレーム化 ---
-pca_cols = [f"PCA{i+1}" for i in range(22)]
-df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
+if X_scaled is not None:
+    X_pca = pca.fit_transform(X_scaled)
 
-# --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
-df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
+    # --- 5) PCA結果をデータフレーム化 ---
+    pca_cols = [f"PCA{i+1}" for i in range(n_components)]
+    df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
 
-feature_names = pca_cols  # PCA列を重み対象にする
+    # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
+    df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
+
+    feature_names = pca_cols  # PCA列を重み対象にする
+    st.success("PCA 実行完了")
+
+else:
+    st.info("まだ設定がされていません")
+
+# # --- 5) PCA結果をデータフレーム化 ---
+# pca_cols = [f"PCA{i+1}" for i in range(n_components)]
+# df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
+
+# # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
+# df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
+
+# feature_names = pca_cols  # PCA列を重み対象にする
 
 # セッションステート初期化
 if "weights" not in st.session_state:

@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 
-st.title('streamlit')
+st.title(":streamlit: streamlit")
 
 st.subheader('streamlitのインストール', divider='rainbow')
 # コード表示
@@ -22,3 +22,14 @@ st.code(code, language='python')
 
 st.subheader('参考サイト', divider='rainbow')
 st.write("- [Streamlit_documentation](https://docs.streamlit.io/): streamlitのドキュメント")
+
+st.subheader('ASOBI', divider='rainbow')
+col1_1, col1_2 = st.columns(2)
+
+with col1_1:
+    if st.button("風船"):
+        st.balloons()
+
+with col1_2:
+    if st.button("雪"):
+        st.snow()
