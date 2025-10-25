@@ -81,9 +81,9 @@ def evaluate(weights_change, datas, labels, C, kernel, gamma=None, degree=None, 
         return np.mean(scores)
 
 #山登り法(2方向)
-def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
+def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
     n_features = datas.shape[1]
-    weights_change = np.ones(n_features).astype(float)
+    weights_change = weights_init.copy().astype(float)
 
     best_score, best_X_val, best_y_val, best_pred = evaluate(
         weights_change, datas, labels, C, kernel, gamma, degree, coef0, k=k, return_best_split=True, max_iter_svc=max_iter_svc
@@ -140,9 +140,9 @@ def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=1
     return global_best_weights, global_best_score, global_best_pack[0], global_best_pack[1], global_best_pack[2], score_history
 
 #山登り法(3方向)
-def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
+def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
     n_features = datas.shape[1]
-    weights_change = np.ones(n_features, dtype=float)
+    weights_change = weights_init.copy().astype(float)
 
     # 初期評価
     best_score, best_X_val, best_y_val, best_pred = evaluate(
@@ -199,9 +199,9 @@ def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=1
 
 
 
-def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, labels, max_iter_hc=1000, k=5, max_iter_svc=1500):
+def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_1(
-        datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
+        datas, labels, C, kernel, gamma, degree, weights_init, coef0, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
     )
     return {
         "step_size": step_size,
@@ -219,9 +219,9 @@ def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, label
         "pred": pred_tmp,
     }
 
-def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, labels, max_iter_hc=1000, k=5, max_iter_svc=1500):
+def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_2(
-        datas, labels, C, kernel, gamma, degree, coef0, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
+        datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
     )
     return {
         "step_size": step_size,
@@ -293,7 +293,6 @@ def run_shift_experiment():
                 ↓  
                 これを max_iter 回繰り返す
                 """, language="text")
-
 
     # ===== サイドバー: アルゴリズム設定 =====
     st.sidebar.header("最適化の設定")
@@ -530,6 +529,34 @@ def run_shift_experiment():
     options = ['する', 'しない']
     choice_4 = st.sidebar.selectbox('データの標準化', options, index = None, placeholder="選択してください")
 
+    # --- 初期重み設定 ---
+    st.sidebar.header("初期設定")
+
+    n_features = len(stocks)
+    if n_features == 0:
+        st.sidebar.warning("⚠️ まず使用するカラム（P1.. / D1..）を選択してください。")
+        st.stop() 
+    
+    init_type = st.sidebar.radio("重みの初期値を選択", ["全て1", "ランダム"], index=0)
+
+    if init_type == "ランダム":
+        min_val = st.sidebar.number_input("ランダム最小値", value=-1.0, step=0.1)
+        max_val = st.sidebar.number_input("ランダム最大値", value=1.0, step=0.1)
+        if min_val >= max_val:
+            st.sidebar.warning("最小値は最大値より小さく設定してください。")
+            max_val = min_val + 1.0
+        weights_init = np.random.uniform(min_val, max_val, n_features)
+        weights_init = np.round(weights_init, 1)  # 小数第1位に丸め
+    else:
+        weights_init = np.ones(n_features, float)
+
+    # 1行目がstock名、2行目がweights_initのDataFrameを作成
+    df_weights_init = pd.DataFrame([weights_init], columns=stocks)
+    df_weights_init.index = ["初期重み"]  # 行名を付けると見やすい
+
+    st.markdown("#### 初期重みデータフレーム")
+    st.dataframe(df_weights_init)
+
     # 欠損値補完のUI（元のまま）
     st.sidebar.selectbox('欠損値補完の方法は？', ['欠損値削除', '中央値補完', '平均値補完', 'k-NN法補完'], index = None, placeholder="選択してください")
 
@@ -590,7 +617,7 @@ def run_shift_experiment():
 
         with ProcessPoolExecutor(max_workers=4) as executor:
             futures = {
-                executor.submit(run_hill, step_size, kernel, g, d, c0, C, datas, labels, max_iter_hc=max_iter_hc, k=k_cv, max_iter_svc=max_iter_svc):
+                executor.submit(run_hill, step_size, kernel, g, d, c0, C, datas, labels, weights_init=weights_init, max_iter_hc=max_iter_hc, k=k_cv, max_iter_svc=max_iter_svc):
                 (step_size, g, d, c0, C)
                 for (step_size, g, d, c0, C) in param_grid
             }
