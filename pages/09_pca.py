@@ -176,53 +176,6 @@ elif choice_1 == 'k-NN法補完' and choice_2 == 'FUSION':
     X = df1[X_cols].copy()
     pain_col = df1.columns[1]
 
-# if choice_2 in ["PainDITECT"]:
-#     X_cols = df1.loc[:, "P1":"D13"].columns.tolist()
-#     X = df1[X_cols].copy()
-#     pain_col = df1.columns[1]
-
-# if choice_2 in ["BS-POP"]:
-#     X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
-#     X = df1[X_cols].copy()
-#     pain_col = df1.columns[1]
-
-# if choice_2 in ["FUSION"]:
-#     X_cols = df1.loc[:, "P1":"D18"].columns.tolist()
-#     X = df1[X_cols].copy()
-#     pain_col = df1.columns[1]
-
-# weights = []
-
-# # セッションステートの初期化
-# if "weights" not in st.session_state:
-#     st.session_state.weights = {stock: 1.0 for stock in X_cols}
-# if "reset" not in st.session_state:
-#     st.session_state.reset = False
-
-# # 重みの初期化
-# if st.button("重みをリセット", key="weights_reset"):
-#     for stock in X_cols:
-#         st.session_state.weights[stock] = 1.0  # 全ての重みを初期化
-#     st.session_state.reset = True
-
-# # 動的にスライドバーを生成し、weightsに格納
-# for column in X_cols:
-#     if column not in st.session_state.weights:
-#         st.session_state.weights[column] = 1.0
-#     # セッションステートからスライダーの初期値を取得
-#     default_weight = st.session_state.weights[column]
-#     st.sidebar.markdown("### 重み付け")
-#     weight = st.sidebar.slider(f"{column}の重み", min_value=-5.0, max_value=5.0, value=default_weight, step=0.1, key=f"slider_{column}")
-#     weights.append(weight)
-#     # スライダーの値をセッションステートに保存
-#     st.session_state.weights[column] = weight
-
-# # データフレームを作成
-# edited_df = pd.DataFrame({"columns": X_cols, "weights": weights})
-
-# # データフレームを表示
-# st.dataframe(edited_df)
-
 # st.markdown('#### データの標準化')
 # セレクトボックスのオプションを定義
 options = ['する', 'しない']
@@ -246,7 +199,6 @@ if choice_4 == "する":
 
 # --- 4) PCA（主成分数を指定：例 3つ） ---
 pca = PCA(n_components)
-# X_pca = pca.fit_transform(X_scaled)
 
 if X_scaled is not None:
     X_pca = pca.fit_transform(X_scaled)
@@ -263,15 +215,6 @@ if X_scaled is not None:
 
 else:
     st.info("まだ設定がされていません")
-
-# # --- 5) PCA結果をデータフレーム化 ---
-# pca_cols = [f"PCA{i+1}" for i in range(n_components)]
-# df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
-
-# # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
-# df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
-
-# feature_names = pca_cols  # PCA列を重み対象にする
 
 # セッションステート初期化
 if "weights" not in st.session_state:
@@ -313,46 +256,12 @@ if st.button("開始", help="実験の実行"):
     columns = edited_df["columns"].tolist()
     weights = edited_df["weights"].tolist()
 
-    # # 標準化の処理（必要に応じて）
-    # if choice_4 == "する":
-    #     scaler = StandardScaler()
-    #     X_scaled = scaler.fit_transform(X)
-
-    # # --- 4) PCA（主成分数を指定：例 3つ） ---
-    # pca = PCA(n_components=3)
-    # X_pca = pca.fit_transform(X_scaled)
-
-    # # --- 5) PCA結果をデータフレーム化 ---
-    # pca_cols = [f"PCA{i+1}" for i in range(3)]
-    # df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
-
-    # # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
-    # df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
-
     # --- 7) 疼痛種類で3分割 ---
     df_nociceptive = df_pca_final[df_pca_final[pain_col] == "侵害受容性疼痛"].copy()
     df_neuropathic = df_pca_final[df_pca_final[pain_col] == "神経障害性疼痛"].copy()
     df_other = df_pca_final[
         ~df_pca_final[pain_col].isin(["侵害受容性疼痛", "神経障害性疼痛"])
     ].copy()
-
-    # # 重みの初期化
-    # if st.button("重みをリセット", key="weights_reset"):
-    #     for stock in X_cols:
-    #         st.session_state.weights[stock] = 1.0  # 全ての重みを初期化
-    #     st.session_state.reset = True
-
-    # # 動的にスライドバーを生成し、weightsに格納
-    # for column in X_cols:
-    #     if column not in st.session_state.weights:
-    #         st.session_state.weights[column] = 1.0
-    #     # セッションステートからスライダーの初期値を取得
-    #     default_weight = st.session_state.weights[column]
-    #     st.sidebar.markdown("### 重み付け")
-    #     weight = st.sidebar.slider(f"{column}の重み", min_value=-5.0, max_value=5.0, value=default_weight, step=0.1, key=f"slider_{column}")
-    #     weights.append(weight)
-    #     # スライダーの値をセッションステートに保存
-    #     st.session_state.weights[column] = weight
     
     # データの指定
     df_nociceptive_train = df_nociceptive[columns]

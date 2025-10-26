@@ -14,6 +14,7 @@ import joblib
 
 import streamlit as st
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from sklearn.decomposition import PCA
 
 # =========================
 # ユーティリティ
@@ -83,7 +84,11 @@ def evaluate(weights_change, datas, labels, C, kernel, gamma=None, degree=None, 
 #山登り法(2方向)
 def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
     n_features = datas.shape[1]
-    weights_change = weights_init.copy().astype(float)
+    if weights_init is None:
+        weights_init = np.ones(n_features, dtype=float)
+    elif isinstance(weights_init, list):
+        weights_init = np.asarray(weights_init, dtype=float)
+    weights_change = weights_init.copy()
 
     best_score, best_X_val, best_y_val, best_pred = evaluate(
         weights_change, datas, labels, C, kernel, gamma, degree, coef0, k=k, return_best_split=True, max_iter_svc=max_iter_svc
@@ -142,7 +147,11 @@ def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init
 #山登り法(3方向)
 def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
     n_features = datas.shape[1]
-    weights_change = weights_init.copy().astype(float)
+    if weights_init is None:
+        weights_init = np.ones(n_features, dtype=float)
+    elif isinstance(weights_init, list):
+        weights_init = np.asarray(weights_init, dtype=float)
+    weights_change = weights_init.copy()
 
     # 初期評価
     best_score, best_X_val, best_y_val, best_pred = evaluate(
@@ -200,6 +209,12 @@ def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init
 
 
 def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
+    n_features = datas.shape[1]
+    if weights_init is None:
+        weights_init = np.ones(n_features, dtype=float)
+    elif isinstance(weights_init, list):
+        weights_init = np.asarray(weights_init, dtype=float)
+
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_1(
         datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
     )
@@ -220,6 +235,12 @@ def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, label
     }
 
 def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
+    n_features = datas.shape[1]
+    if weights_init is None:
+        weights_init = np.ones(n_features, dtype=float)
+    elif isinstance(weights_init, list):
+        weights_init = np.asarray(weights_init, dtype=float)
+    
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_2(
         datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
     )
@@ -242,7 +263,7 @@ def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, label
 # =========================
 # UI & メイン処理
 # =========================
-def run_shift_experiment():
+def run_shift_pca_experiment():
     hill_type = st.sidebar.radio("山登り法の選択",["2方向", "3方向"], index=0)
 
     if hill_type == "2方向":
@@ -308,6 +329,16 @@ def run_shift_experiment():
     k_cv = st.sidebar.slider("StratifiedKFold の分割数 (k)", min_value=2, max_value=8, value=5, step=1)
     max_iter_svc = st.sidebar.number_input("SVC の max_iter", min_value=-1, max_value=50000, value=1500, step=100)
 
+    st.sidebar.header("最適化の設定")
+    # 主成分数をスライダーで指定
+    n_components = st.sidebar.slider(
+        "主成分数 (n_components)",
+        min_value=2,
+        max_value=20,     # ここは自動的に列数でもOKに変更可
+        value=5,
+        step=1
+    )
+
     st.sidebar.header("グリッドサーチ値")
     C_values = parse_num_list(st.sidebar.text_input("C", value="0.1, 1, 10"), float)
 
@@ -335,204 +366,174 @@ def run_shift_experiment():
 
     # ==== データ読込（元ロジックを踏襲） ====
     if choice_1 == '欠損値データ削除' and choice_2 == 'PainDITECT':
-        df1 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_侵害.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_神経.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/null/peindetect/questionnaire_paindetect_missing.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"P13"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'BS-POP':
-        df1 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing_侵害.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing_神経.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/null/BSPOP/questionnaire_bspop_missing.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '欠損値データ削除' and choice_2 == 'FUSION':
-        df1 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_侵害.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_神経.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/null/fusion/questionnaire_fusion_missing.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '中央値補完' and choice_2 == 'PainDITECT':
-        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_median_不明_paindetect.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_paindetect_median.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D13"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '中央値補完' and choice_2 == 'BS-POP':
-        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_median_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_median_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_median_不明_bspop.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_bspop_median.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '中央値補完' and choice_2 == 'FUSION':
-        df1 = pd.read_csv('data/欠損値補完/FUSION/det_median_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/FUSION/det_median_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/FUSION/det_median_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_fusion_median.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '平均値補完' and choice_2 == 'PainDITECT':
-        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_mean_不明_paindetect.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_paindetect_mean.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D13"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '平均値補完' and choice_2 == 'BS-POP':
-        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_mean_不明_bspop.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_bspop_mean.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == '平均値補完' and choice_2 == 'FUSION':
-        df1 = pd.read_csv('data/欠損値補完/FUSION/det_mean_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/FUSION/det_mean_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/FUSION/det_mean_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_fusion_mean.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'PainDITECT':
-        df1 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_侵害受容性疼痛_paindetect.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_神経障害性疼痛_paindetect.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/PAINDITECT/det_KNN_不明_paindetect.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_paindetect_knn.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D13"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'BS-POP':
-        df1 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_侵害受容性疼痛_bspop.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_神経障害性疼痛_bspop.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/BSPOP/det_KNN_不明_bspop.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_bspop_knn.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "D1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
+
 
     elif choice_1 == 'k-NN法補完' and choice_2 == 'FUSION':
-        df1 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_侵害受容性疼痛.csv', encoding = 'utf-8')
-        df2 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_神経障害性疼痛.csv', encoding = 'utf-8')
-        df3 = pd.read_csv('data/欠損値補完/FUSION/det_KNN_不明.csv', encoding = 'utf-8')
-        st.markdown('#### 侵害受容性疼痛'); st.dataframe(df1)
-        st.markdown('#### 神経障害性疼痛'); st.dataframe(df2)
-        st.markdown('#### 原因不明'); st.dataframe(df3)
-
-    # ======== カラム選択UI（元コード維持） ========
-    if 'checkbox_states_1' not in st.session_state:
-        st.session_state.checkbox_states_1 = {f"P{i}": False for i in range(1, 14)}
-
-    if choice_2 in ["PainDITECT", "FUSION"]:
-        st.header("使用するカラムの指定(PainDITECT)")
-
-        col_buttons = st.columns(2)
-        if col_buttons[0].button('全選択', key='select_all_1'):
-            for key in st.session_state.checkbox_states_1:
-                st.session_state.checkbox_states_1[key] = True
-                st.session_state[key] = True
-            st.rerun()
-
-        if col_buttons[1].button('全解除', key='deselect_all_1'):
-            for key in st.session_state.checkbox_states_1:
-                st.session_state.checkbox_states_1[key] = False
-                st.session_state[key] = False
-            st.rerun()
-
-        col_1 = st.columns(7)
-        for i, col in enumerate(col_1, start=1):
-            st.session_state.checkbox_states_1[f"P{i}"] = col.checkbox(
-                label=f'P{i}', value=st.session_state.checkbox_states_1[f"P{i}"], key=f"P{i}"
-            )
-        col_2 = st.columns(6)
-        for i, col in enumerate(col_2, start=8):
-            st.session_state.checkbox_states_1[f"P{i}"] = col.checkbox(
-                label=f'P{i}', value=st.session_state.checkbox_states_1[f"P{i}"], key=f"P{i}"
-            )
-
-    if 'checkbox_states_2' not in st.session_state:
-        st.session_state.checkbox_states_2 = {f"D{i}": False for i in range(1, 19)}
-
-    if choice_2 in ["BS-POP", "FUSION"]:
-        st.header("使用するカラムの指定(BS-POP)")
-
-        col_buttons = st.columns(2)
-        if col_buttons[0].button('全選択', key='select_all_2'):
-            for key in st.session_state.checkbox_states_2:
-                st.session_state.checkbox_states_2[key] = True
-                st.session_state[key] = True
-            st.rerun()
-
-        if col_buttons[1].button('全解除', key='deselect_all_2'):
-            for key in st.session_state.checkbox_states_2:
-                st.session_state.checkbox_states_2[key] = False
-                st.session_state[key] = False
-            st.rerun()
-
-        for row_start in [1, 7, 13]:
-            cols = st.columns(6)
-            for i, c in enumerate(cols, start=row_start):
-                if i > 18: break
-                st.session_state.checkbox_states_2[f"D{i}"] = c.checkbox(
-                    label=f'D{i}', value=st.session_state.checkbox_states_2[f"D{i}"], key=f"D{i}"
-                )
-
-    st.markdown('#### 重みづけの指定')
-
-    stocks = []
-    if choice_2 in ["PainDITECT", "FUSION"]:
-        for i in range(1, 14):
-            if st.session_state.get(f"P{i}", False):
-                stocks.append(f"P{i}")
-    if choice_2 in ["BS-POP", "FUSION"]:
-        for i in range(1, 19):
-            if st.session_state.get(f"D{i}", False):
-                stocks.append(f"D{i}")
-
-    weights = []
-
-    # --- セッションステート初期化 ---
-    if "weights" not in st.session_state:
-        st.session_state.weights = {stock: 1.0 for stock in stocks}
-
-    if "reset" not in st.session_state:
-        st.session_state.reset = False
-
-    # --- リセットボタン ---
-    if st.button("重みリセット"):
-        for key in st.session_state.weights.keys():
-            st.session_state.weights[key] = 1.0
-        st.rerun()
-
-    st.sidebar.markdown("### 重み付け")
-    for column in stocks:
-        if column not in st.session_state.weights:
-            st.session_state.weights[column] = 1.0
-        weight = st.sidebar.slider(f"{column}の重み", min_value=-5.0, max_value=5.0, value=float(st.session_state.weights[column]), step=0.1, key=f"slider_{column}")
-        weights.append(weight)
-        st.session_state.weights[column] = weight
-
-    edited_df = pd.DataFrame({"columns": stocks, "weights": weights})
-    st.dataframe(edited_df)
+        df1 = pd.read_csv('data/主成分分析用/questionnaire_fusion_knn.csv', encoding = 'utf-8')
+        st.markdown('#### データ')
+        st.dataframe(df1)
+        X_cols = df1.loc[:, "P1":"D18"].columns.tolist()
+        X = df1[X_cols].copy()
+        pain_col = df1.columns[1]
 
     options = ['する', 'しない']
     choice_4 = st.sidebar.selectbox('データの標準化', options, index = None, placeholder="選択してください")
 
+    X_scaled = None
+    feature_names = []
+
+    # 標準化の処理（必要に応じて）
+    if choice_4 == "する":
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+
+    # --- 4) PCA（主成分数を指定：例 3つ） ---
+    pca = PCA(n_components, svd_solver="full")
+
+    if X_scaled is not None:
+        X_pca = pca.fit_transform(X_scaled)
+
+        # --- 5) PCA結果をデータフレーム化 ---
+        pca_cols = [f"PCA{i+1}" for i in range(n_components)]
+        df_pca = pd.DataFrame(X_pca, columns=pca_cols, index=df1.index)
+
+        # --- 6) 疼痛種類カラム + PCA列の新しいDataFrameを作成 ---
+        df_pca_final = pd.concat([df1[[pain_col]], df_pca], axis=1)
+
+        feature_names = pca_cols  # PCA列を重み対象にする
+        st.success("PCA 実行完了")
+
+    else:
+        st.info("まだ設定がされていません")
+
+    # セッションステート初期化
+    if "weights" not in st.session_state:
+        st.session_state.weights = {col: 1.0 for col in feature_names}
+    if "reset" not in st.session_state:
+        st.session_state.reset = False
+
+    # 重みリセットボタン
+    if st.button("重みをリセット", key="weights_reset"):
+        for col in feature_names:
+            st.session_state.weights[col] = 1.0
+        st.session_state.reset = True
+        st.success("全ての重みを1.0にリセットしました")
+
+    # サイドバータイトル
+    st.sidebar.markdown("### 重み付け（PCA列）")
+
+    # スライダー生成
+    weights = []
+    for col in feature_names:
+        if col not in st.session_state.weights:
+            st.session_state.weights[col] = 1.0
+        default_weight = st.session_state.weights[col]
+        weight = st.sidebar.slider(
+            f"{col} の重み",
+            min_value=-5.0, max_value=5.0,
+            value=default_weight, step=0.1,
+            key=f"slider_{col}"
+        )
+        st.session_state.weights[col] = weight
+        weights.append(weight)
+
+    # 重み確認用データフレーム
+    edited_df = pd.DataFrame({"columns": feature_names, "weights": weights})
+    st.write("現在の重み（PCA列）")
+    st.dataframe(edited_df, use_container_width=True)
+
+    st.markdown('#### 重みづけの指定')
+
     # --- 初期重み設定 ---
     st.sidebar.header("初期設定")
 
-    n_features = len(stocks)
+    n_features = len(feature_names)
     if n_features == 0:
         st.sidebar.warning("⚠️ まず使用するカラム（P1.. / D1..）を選択してください。")
         st.stop() 
@@ -551,11 +552,13 @@ def run_shift_experiment():
         weights_init = np.ones(n_features, float)
 
     # 1行目がstock名、2行目がweights_initのDataFrameを作成
-    df_weights_init = pd.DataFrame([weights_init], columns=stocks)
+    df_weights_init = pd.DataFrame([weights_init], columns=feature_names)
     df_weights_init.index = ["初期重み"]  # 行名を付けると見やすい
 
     st.markdown("#### 初期重みデータフレーム")
     st.dataframe(df_weights_init)
+
+    weights_init_payload = np.asarray(weights_init, dtype=float).tolist()
 
     # 欠損値補完のUI（元のまま）
     st.sidebar.selectbox('欠損値補完の方法は？', ['欠損値削除', '中央値補完', '平均値補完', 'k-NN法補完'], index = None, placeholder="選択してください")
@@ -564,10 +567,17 @@ def run_shift_experiment():
         columns = edited_df["columns"].tolist()
         weights = edited_df["weights"].tolist()
 
+        # --- 7) 疼痛種類で3分割 ---
+        df_nociceptive = df_pca_final[df_pca_final[pain_col] == "侵害受容性疼痛"].copy()
+        df_neuropathic = df_pca_final[df_pca_final[pain_col] == "神経障害性疼痛"].copy()
+        df_other = df_pca_final[
+            ~df_pca_final[pain_col].isin(["侵害受容性疼痛", "神経障害性疼痛"])
+        ].copy()
+        
         # データの指定
-        df_nociceptive_train = df1[columns]
-        df_neuronociceptive_train = df2[columns]
-        df_unknown_train = df3[columns]
+        df_nociceptive_train = df_nociceptive[columns]
+        df_neuronociceptive_train = df_neuropathic[columns]
+        df_unknown_train = df_other[columns]
 
         # 重み適用
         df_nociceptive_train_weighted = df_nociceptive_train.mul(weights, axis=1)
@@ -582,10 +592,6 @@ def run_shift_experiment():
         labels2 = np.full(len(df_neuronociceptive_train_weighted), 2, np.int32)
         labels3 = np.full(len(df_unknown_train_weighted), 3, np.int32)
         labels = np.concatenate([labels1, labels2, labels3]).astype(np.int32)
-
-        if choice_4 == "する":
-            scaler = StandardScaler()
-            datas = scaler.fit_transform(datas)
 
         st.title("🧠 Hill Climbing × 並列探索（SVM最適化）")
 
@@ -617,7 +623,7 @@ def run_shift_experiment():
 
         with ProcessPoolExecutor(max_workers=4) as executor:
             futures = {
-                executor.submit(run_hill, step_size, kernel, g, d, c0, C, datas, labels, weights_init=weights_init, max_iter_hc=max_iter_hc, k=k_cv, max_iter_svc=max_iter_svc):
+                executor.submit(run_hill, step_size, kernel, g, d, c0, C, datas, labels, weights_init_payload, max_iter_hc=max_iter_hc, k=k_cv, max_iter_svc=max_iter_svc):
                 (step_size, g, d, c0, C)
                 for (step_size, g, d, c0, C) in param_grid
             }
@@ -681,7 +687,7 @@ def run_shift_experiment():
             joblib.dump(final_model, "final_model.joblib")
             st.success("✅ 最終モデルを保存しました！（final_model.joblib）")
 
-            best_weights_df = pd.DataFrame(np.array(best_result["weights"]).astype(float), index=stocks, columns=["Weight"])
+            best_weights_df = pd.DataFrame(np.array(best_result["weights"]).astype(float), index=feature_names, columns=["Weight"])
 
             st.subheader("📊 パラメータ別スコア（簡易表）")
             small_df = results_df[["step_size", "kernel", "C", "gamma", "degree", "coef0", "score"]].copy()
