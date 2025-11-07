@@ -1,3 +1,4 @@
+
 import time
 import random
 import numpy as np
@@ -18,6 +19,29 @@ from sklearn.decomposition import PCA
 # =========================
 # ユーティリティ
 # =========================
+
+# クリップ → 平均1（任意）で整える
+def normalize_w(w, clip_low=0.0, clip_high=3.0, mean_one=True):
+    w = np.asarray(w, dtype=float)
+    w = np.clip(w, clip_low, clip_high)
+    if mean_one:
+        m = w.mean()
+        if m > 0:
+            w = w / m
+    return w
+
+# 部分ランダムジャンプ（k個の重みに乗算ノイズ）
+def partial_random_jump_w(w, k, strength, *, clip_low=0.0, clip_high=3.0, mean_one=True, rng=None):
+    rng = np.random.default_rng() if rng is None else rng
+    w = np.asarray(w, dtype=float).copy()
+    d = len(w)
+    k = max(1, min(int(np.ceil(k)), d))  # 安全側
+    sel = rng.choice(np.arange(d), size=k, replace=False)
+    noise = rng.uniform(strength[0], strength[1], size=k)
+    w[sel] *= noise
+    return normalize_w(w, clip_low=clip_low, clip_high=clip_high, mean_one=mean_one)
+
+
 def parse_num_list(s, dtype=float):
     """
     '0.1, 1, 10' -> [0.1, 1.0, 10.0] のように変換する。
@@ -81,13 +105,18 @@ def evaluate(weights_change, datas, labels, C, kernel, gamma=None, degree=None, 
         return np.mean(scores)
 
 #山登り法(2方向)
-def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
+def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500, stagnate_L=20, k_small_pct=10, k_big_pct=20, small_strength=(0.85, 1.15), big_strength=(0.5, 1.5), mean_one=True):
+    # 埋め込みの固定値（UIに出さない）
+    CLIP_LOW, CLIP_HIGH = 0.0, 3.0
+    EPS_ACCEPT = 0.0
+    rng = np.random.default_rng(0)
+
     n_features = datas.shape[1]
     if weights_init is None:
         weights_init = np.ones(n_features, dtype=float)
     elif isinstance(weights_init, list):
         weights_init = np.asarray(weights_init, dtype=float)
-    weights_change = weights_init.copy()
+    weights_change = normalize_w(weights_init, CLIP_LOW, CLIP_HIGH, mean_one)
 
     best_score, best_X_val, best_y_val, best_pred = evaluate(
         weights_change, datas, labels, C, kernel, gamma, degree, coef0, k=k, return_best_split=True, max_iter_svc=max_iter_svc
@@ -99,6 +128,8 @@ def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init
     global_best_weights = best_weights.copy()
     global_best_pack = (best_X_val, best_y_val, best_pred)
 
+    no_improve = 0
+
     for _ in range(max_iter_1):
         step_best_score = -np.inf
         candidates = []
@@ -106,19 +137,20 @@ def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init
 
         for idx in range(n_features):
             for delta in [-step_size, step_size]:
-                trial_weights = weights_change.copy().astype(float)
+                trial_weights = best_weights.copy().astype(float)
                 trial_weights[idx] += delta
-                trial_configs.append((trial_weights, idx, delta))
+                trial_weights = normalize_w(trial_weights, CLIP_LOW, CLIP_HIGH, mean_one)
+                trial_configs.append(trial_weights)
 
         results = []
-        for tw, _, _ in trial_configs:
+        for trial_weights in trial_configs:
             results.append(
-                evaluate(tw, datas, labels, C, kernel, gamma, degree, coef0,
+                evaluate(trial_weights, datas, labels, C, kernel, gamma, degree, coef0,
                         k=k, return_best_split=True, max_iter_svc=max_iter_svc)
             )
 
         for i in range(len(trial_configs)):
-            trial_weights, _, _ = trial_configs[i]
+            trial_weights = trial_configs[i]
             score, X_val_tmp, y_val_tmp, pred_tmp = results[i]
 
             if score > step_best_score:
@@ -127,30 +159,58 @@ def hill_climbing_1(datas, labels, C, kernel, gamma, degree, coef0, weights_init
             elif score == step_best_score:
                 candidates.append((trial_weights.copy(), X_val_tmp, y_val_tmp, pred_tmp))
 
-        # ✅ スコアが同じ候補からランダムに1つを選ぶ
-        selected_weights, selected_X_val, selected_y_val, selected_pred = random.choice(candidates)
-        weights_change = selected_weights
-        best_weights = weights_change.copy()
-        best_score = step_best_score
-        score_history.append(best_score)
+        # 同点ならランダム1つ
+        sel_w, sel_Xv, sel_yv, sel_pred = random.choice(candidates)
+        s_prev, s_new = best_score, step_best_score
+        accept = (s_new >= s_prev) or (rng.random() < EPS_ACCEPT)
+        if accept:
+            best_weights = sel_w
+            best_score = s_new
+            best_X_val, best_y_val, best_pred = sel_Xv, sel_yv, sel_pred
 
-        # ★ 追加: グローバルベストを改善時のみ更新（返却の整合性用）
-        if best_score >= global_best_score:
+        # ベスト管理
+        if best_score > global_best_score:
             global_best_score = best_score
             global_best_weights = best_weights.copy()
-            global_best_pack = (selected_X_val, selected_y_val, selected_pred)
+            global_best_pack = (best_X_val, best_y_val, best_pred)
+            no_improve = 0
+        else:
+            no_improve += 1
 
-    # ★ 変更: 返り値は“グローバルベスト”に統一
+        # ★ 停滞時のPRJ（小 → 大）
+        if no_improve >= stagnate_L:
+            d = len(best_weights)
+            k_small = max(1, int(np.ceil((k_small_pct/100.0) * d)))
+            best_weights = partial_random_jump_w(
+                best_weights, k=k_small, strength=small_strength,
+                clip_low=CLIP_LOW, clip_high=CLIP_HIGH, mean_one=mean_one, rng=rng
+            )
+
+            if no_improve >= 2 * stagnate_L:
+                k_big = max(1, int(np.ceil((k_big_pct/100.0) * d)))
+                best_weights = partial_random_jump_w(
+                    best_weights, k=k_big, strength=big_strength,
+                    clip_low=CLIP_LOW, clip_high=CLIP_HIGH, mean_one=mean_one, rng=rng
+                )
+                no_improve = 0
+        
+        score_history.append(best_score)
+
     return global_best_weights, global_best_score, global_best_pack[0], global_best_pack[1], global_best_pack[2], score_history
 
 #山登り法(3方向)
-def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500):
+def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=1000, step_size=0.01, k=5, max_iter_svc=1500, stagnate_L=20, k_small_pct=10, k_big_pct=20, small_strength=(0.85, 1.15), big_strength=(0.5, 1.5), mean_one=True):
+    # 埋め込みの固定値（UIに出さない)
+    CLIP_LOW, CLIP_HIGH = 0.0, 3.0
+    EPS_ACCEPT = 0.0
+    rng = np.random.default_rng(0)
+
     n_features = datas.shape[1]
     if weights_init is None:
         weights_init = np.ones(n_features, dtype=float)
     elif isinstance(weights_init, list):
         weights_init = np.asarray(weights_init, dtype=float)
-    weights_change = weights_init.copy()
+    weights_change = normalize_w(weights_init, CLIP_LOW, CLIP_HIGH, mean_one)
 
     # 初期評価
     best_score, best_X_val, best_y_val, best_pred = evaluate(
@@ -165,6 +225,8 @@ def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init
     global_best_weights = best_weights.copy()
     global_best_pack = (best_X_val, best_y_val, best_pred)
 
+    no_improve = 0
+
     # === 3方向（-step, 0, +step）ヒルクライミング ===
     for i in range(max_iter_1):
         step_best_score = best_score
@@ -175,6 +237,7 @@ def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init
             for delta in (-step_size, 0.0, step_size):
                 trial_weights = best_weights.copy()
                 trial_weights[idx] += delta
+                trial_weights = normalize_w(trial_weights, CLIP_LOW, CLIP_HIGH, mean_one)
 
                 if delta == 0.0:
                     score, Xv, yv, pred = best_score, best_X_val, best_y_val, best_pred
@@ -189,25 +252,46 @@ def hill_climbing_2(datas, labels, C, kernel, gamma, degree, coef0, weights_init
                     step_best_weights = trial_weights
                     step_best_pack = (Xv, yv, pred)
 
-        # 改善があれば更新、なければ早期終了
-        if step_best_score > best_score:
+
+        # 受理
+        if (step_best_score > best_score) or (rng.random() < EPS_ACCEPT):
             best_score = step_best_score
             best_weights = step_best_weights
             best_X_val, best_y_val, best_pred = step_best_pack
-            score_history.append(best_score)
 
-            if best_score >= global_best_score:
+            if best_score > global_best_score:
                 global_best_score = best_score
                 global_best_weights = best_weights.copy()
                 global_best_pack = step_best_pack
+                no_improve = 0
+            else:
+                no_improve += 1
         else:
-            break
+            no_improve += 1
 
-    return global_best_weights,global_best_score,global_best_pack[0],global_best_pack[1],global_best_pack[2],score_history
+        # ★ PRJ
+        if no_improve >= stagnate_L:
+            d = len(best_weights)
+            k_small = max(1, int(np.ceil((k_small_pct/100.0) * d)))
+            best_weights = partial_random_jump_w(
+                best_weights, k=k_small, strength=small_strength,
+                clip_low=CLIP_LOW, clip_high=CLIP_HIGH, mean_one=mean_one, rng=rng
+            )
+            if no_improve >= 2 * stagnate_L:
+                k_big = max(1, int(np.ceil((k_big_pct/100.0) * d)))
+                best_weights = partial_random_jump_w(
+                    best_weights, k=k_big, strength=big_strength,
+                    clip_low=CLIP_LOW, clip_high=CLIP_HIGH, mean_one=mean_one, rng=rng
+                )
+                no_improve = 0
+
+        score_history.append(best_score)
+
+    return global_best_weights, global_best_score, global_best_pack[0], global_best_pack[1], global_best_pack[2], score_history
 
 
 
-def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
+def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500, stagnate_L=20, k_small_pct=10, k_big_pct=20, small_strength=(0.85, 1.15), big_strength=(0.5, 1.5), mean_one=True):
     n_features = datas.shape[1]
     if weights_init is None:
         weights_init = np.ones(n_features, dtype=float)
@@ -215,7 +299,10 @@ def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, label
         weights_init = np.asarray(weights_init, dtype=float)
 
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_1(
-        datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
+        datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc,
+        stagnate_L=stagnate_L, k_small_pct=k_small_pct, k_big_pct=k_big_pct,
+        small_strength=small_strength, big_strength=big_strength,
+        mean_one=mean_one
     )
     return {
         "step_size": step_size,
@@ -233,7 +320,7 @@ def run_hill_climbing_1(step_size, kernel, gamma, degree, coef0, C, datas, label
         "pred": pred_tmp,
     }
 
-def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500):
+def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, labels, weights_init, max_iter_hc=1000, k=5, max_iter_svc=1500, stagnate_L=20, k_small_pct=10, k_big_pct=20, small_strength=(0.85, 1.15), big_strength=(0.5, 1.5), mean_one=True):
     n_features = datas.shape[1]
     if weights_init is None:
         weights_init = np.ones(n_features, dtype=float)
@@ -241,7 +328,10 @@ def run_hill_climbing_2(step_size, kernel, gamma, degree, coef0, C, datas, label
         weights_init = np.asarray(weights_init, dtype=float)
     
     weights_best, score, X_val_tmp, y_val_tmp, pred_tmp, score_history = hill_climbing_2(
-        datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc
+        datas, labels, C, kernel, gamma, degree, coef0, weights_init, max_iter_1=max_iter_hc, step_size=step_size, k=k, max_iter_svc=max_iter_svc,
+        stagnate_L=stagnate_L, k_small_pct=k_small_pct, k_big_pct=k_big_pct,
+        small_strength=small_strength, big_strength=big_strength,
+        mean_one=mean_one
     )
     return {
         "step_size": step_size,
@@ -327,6 +417,23 @@ def run_shift_pca_experiment():
     max_iter_hc = st.sidebar.number_input("山登り法の反復回数 (max_iter)", min_value=1, max_value=5000, value=1000, step=50)
     k_cv = st.sidebar.slider("StratifiedKFold の分割数 (k)", min_value=2, max_value=8, value=5, step=1)
     max_iter_svc = st.sidebar.number_input("SVC の max_iter", min_value=-1, max_value=50000, value=1500, step=100)
+
+    st.sidebar.header("ランダムジャンプの設定")
+    # ここはあなたの既存UI（そのまま）
+    stagnate_L = st.sidebar.number_input("停滞判定ステップ L", min_value=5, max_value=200, value=20, step=1)
+
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        k_small_pct = st.number_input("小ジャンプ割合(%)", min_value=1, max_value=50, value=10, step=1)
+    with col2:
+        k_big_pct = st.number_input("大ジャンプ割合(%)", min_value=1, max_value=50, value=20, step=1)
+
+    st.text("小ジャンプ強度 (×U[a,b])")
+    small_a, small_b = st.slider("a,b(小)", 0.5, 1.5, (0.85, 1.15), 0.01)
+    st.text("大ジャンプ強度 (×U[a,b])")
+    big_a, big_b   = st.slider("a,b(大)", 0.3, 2.0, (0.5, 1.5), 0.01)
+
+    mean_one = st.sidebar.checkbox("ジャンプ後 平均1に正規化", value=True)
 
     st.sidebar.header("最適化の設定")
     # 主成分数をスライダーで指定
@@ -721,3 +828,4 @@ def run_shift_pca_experiment():
                 specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
 
                 st.write(f"疼痛 {i+1}: 感度 = {sensitivity * 100:.2f}%, 特異度 = {specificity * 100:.2f}%")
+
