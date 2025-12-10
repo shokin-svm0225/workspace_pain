@@ -234,6 +234,8 @@ def default_pca_experiment():
     if choice_4 == "する":
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
+    else:
+        X_scaled = X.copy()
 
     # --- 4) PCA（主成分数を指定：例 3つ） ---
     pca = PCA(n_components)
@@ -332,13 +334,6 @@ def default_pca_experiment():
         labels2 = np.full(len(df_neuronociceptive_train_weighted), 2, np.int32)
         labels3 = np.full(len(df_unknown_train_weighted), 3, np.int32)
         labels = np.concatenate([labels1, labels2, labels3]).astype(np.int32)
-        
-        # 標準化の処理（必要に応じて）
-        if choice_4 == "する":
-            scaler = StandardScaler()
-            datas = scaler.fit_transform(datas)
-        else:
-            datas = datas.copy()
 
         # パラメータの候補を設定
         # === サイドバーで指定した候補値とカーネルを使ってグリッドサーチ ===
