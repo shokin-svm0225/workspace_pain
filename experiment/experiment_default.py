@@ -456,6 +456,8 @@ def default_experiment():
         if choice_4 == "する":
             scaler = StandardScaler()
             datas = scaler.fit_transform(datas)
+        else:
+            datas = datas.copy()
 
         # パラメータの候補を設定
         # === サイドバーで指定した候補値とカーネルを使ってグリッドサーチ ===

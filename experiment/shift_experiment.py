@@ -586,6 +586,8 @@ def run_shift_experiment():
         if choice_4 == "する":
             scaler = StandardScaler()
             datas = scaler.fit_transform(datas)
+        else:
+            datas = datas.copy()
 
         st.title("🧠 Hill Climbing × 並列探索（SVM最適化）")
 

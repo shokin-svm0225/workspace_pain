@@ -471,6 +471,8 @@ def run_shift_pca_experiment():
     if choice_4 == "する":
         scaler = StandardScaler()
         X_scaled = scaler.fit_transform(X)
+    else:
+        X_scaled = X.copy()
 
     # --- 4) PCA（主成分数を指定：例 3つ） ---
     pca = PCA(n_components, svd_solver="full")
