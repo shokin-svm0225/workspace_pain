@@ -91,12 +91,19 @@ if home_type == "研究概要":
     st.write("- 20241107 : streamlit上で相関係数の出力・評価の確認を可能にしました")
 
 elif home_type == "学術講演会":
-    # st.pdf("/Users/iwasho_0225/Desktop/workspace/workspace_pain/picture/gakujutu_streamlit.pdf")
-    st.subheader('学術講演会-予稿', divider='rainbow')
-    img = Image.open('picture/home/学術講演会予稿1.png')
-    st.image(img, use_container_width=True)
-    img = Image.open('picture/home/学術講演会予稿2.png')
-    st.image(img, use_container_width=True)
+    st.subheader('学術講演会', divider='rainbow')
+    tab1, tab2 = st.tabs(["予稿", "発表資料"])
+    # 各タブに内容を追加
+    with tab1:
+        img = Image.open('picture/home/学術講演会予稿1.png')
+        st.image(img, use_container_width=True)
+        img = Image.open('picture/home/学術講演会予稿2.png')
+        st.image(img, use_container_width=True)
+
+    with tab2:
+        st.pdf("picture/学術講演会原稿_完成_岩崎翔太.pdf", height=600)
+
+
 
 elif home_type == "辞書":
     with st.container(border=True):

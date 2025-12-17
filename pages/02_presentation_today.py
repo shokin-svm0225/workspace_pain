@@ -12,15 +12,14 @@ st.title('本日の発表内容')
 with st.container(border=True):
     st.subheader("目次", divider='rainbow')
     st.markdown("""
-    - プログラムの修正
-    - 主成分分析による計算時間の違い
-    - ランダムジャンプを導入した山登り法による考察
+    - 実験1
+    - 実験2
     - 今後の予定の確認
     - アドバイス
     """)
 
 with st.container(border=True):
-    st.subheader("プログラムの修正", divider='rainbow')
+    st.subheader("実験1", divider='rainbow')
     st.markdown("""
     - 変更点1
       - モジュールの変更：ThreadPoolExecutor → ProcessPoolExecutor\n
@@ -67,7 +66,7 @@ with st.container(border=True):
 
         
 with st.container(border=True):
-    st.subheader("主成分分析による計算時間の違い", divider='rainbow')
+    st.subheader("実験2", divider='rainbow')
     st.markdown("""
         **主成分分析とは** \n
         多くの変数を持つ複雑なデータを、少数の指標に要約する統計手法である.
