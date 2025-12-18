@@ -464,7 +464,7 @@ if __name__ == "__main__":
 
     weights_list = []
     for col in feature_names:
-        val = st.sidebar.slider(f"{col} weight", -5.0, 5.0, st.session_state.weights.get(col, 1.0), 0.1, key=f"w_{col}")
+        val = st.sidebar.slider(f"{col} weight", 0.0, 3.0, st.session_state.weights.get(col, 1.0), 0.01, key=f"w_{col}")
         st.session_state.weights[col] = val
         weights_list.append(val)
         
@@ -476,6 +476,8 @@ if __name__ == "__main__":
     # 実行ボタン
     # =========================
     if st.button("SVMパラメータ最適化を開始"):
+
+        start_time = time.time()
         
         # 1. データ準備
         df_nociceptive = df_pca_final[df_pca_final[pain_col] == "侵害受容性疼痛"]
@@ -520,36 +522,51 @@ if __name__ == "__main__":
         import itertools
         cycle_degrees = itertools.cycle(candidate_degrees)
         
-        for _ in range(n_workers):
+        for i in range(n_workers):
             d = next(cycle_degrees)
             
-            # ★★★ ランダムな初期位置の選択（ユーザー指定リストから選ぶ） ★★★
-            start_C = random.choice(candidates_C)
-            
-            this_init_list = [start_C]
-            
-            if kernel in ["rbf", "poly", "sigmoid"]:
-                start_gamma = random.choice(candidates_gamma)
-                this_init_list.append(start_gamma)
+            # 最初の1つのワーカーだけは、ユーザーが入力した先頭の値を「ノイズなし」で使う
+            # (Step 1の結果を再現するため)
+            if i == 0:
+                start_C = candidates_C[0] # リストの先頭を使う
+                this_init_list = [start_C]
                 
-            if kernel in ["poly", "sigmoid"]:
-                start_coef0 = random.choice(candidates_coef0)
-                this_init_list.append(start_coef0)
+                if kernel in ["rbf", "poly", "sigmoid"]:
+                    start_gamma = candidates_gamma[0] # リストの先頭を使う
+                    this_init_list.append(start_gamma)
+                
+                if kernel in ["poly", "sigmoid"]:
+                    start_coef0 = candidates_coef0[0]
+                    this_init_list.append(start_coef0)
+                
+                this_init = np.array(this_init_list)
+                # ★ここはノイズを加えない！そのまま使う
             
-            this_init = np.array(this_init_list)
+            else:
+                # 2つ目以降のワーカーはランダム探索（既存ロジック）
+                start_C = random.choice(candidates_C)
+                this_init_list = [start_C]
+                
+                if kernel in ["rbf", "poly", "sigmoid"]:
+                    start_gamma = random.choice(candidates_gamma)
+                    this_init_list.append(start_gamma)
+                    
+                if kernel in ["poly", "sigmoid"]:
+                    start_coef0 = random.choice(candidates_coef0)
+                    this_init_list.append(start_coef0)
+                
+                this_init = np.array(this_init_list)
+                # 既存のノイズ付加
+                this_init = this_init * np.random.uniform(0.8, 1.2, len(this_init))
             
-            # 初期値に微小ノイズを加える (log/linear共通で簡易的に倍率ノイズ)
-            this_init = this_init * np.random.uniform(0.8, 1.2, len(this_init))
-            
-            # 絶対値ガード (初期値生成時)
+            # --- 以下共通ガード処理 ---
             this_init[0] = max(this_init[0], 0.0001) # C
             if kernel in ["rbf", "poly", "sigmoid"]:
-                this_init[1] = max(this_init[1], 0.0001) # Gamma
-                this_init[1] = min(this_init[1], MAX_GAMMA) # 上限ガード
+                this_init[1] = max(this_init[1], 0.0001)
+                this_init[1] = min(this_init[1], MAX_GAMMA)
             if kernel in ["poly", "sigmoid"]:
-                # Coef0は3番目(index=2)
-                this_init[2] = max(this_init[2], 0.0) # 下限
-                this_init[2] = min(this_init[2], MAX_COEF0) # 上限ガード
+                this_init[2] = max(this_init[2], 0.0)
+                this_init[2] = min(this_init[2], MAX_COEF0)
             
             futures_input.append({
                 "degree": d,
@@ -595,6 +612,8 @@ if __name__ == "__main__":
         
         # 5. 結果表示
         st.success("探索完了！")
+        elapsed = time.time() - start_time
+        st.write(f"⏱ 実行時間: {elapsed:.2f} 秒")
         st.markdown(f"### 🏆 最高正答率: **{best_overall_score*100:.2f}%**")
         
         best_vec = best_overall_result["best_params_vec"]

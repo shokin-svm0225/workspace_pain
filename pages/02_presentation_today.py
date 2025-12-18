@@ -21,6 +21,7 @@ with st.container(border=True):
 with st.container(border=True):
     st.subheader("実験1", divider='rainbow')
     st.markdown("""
+    前回まで行った実験(主成分分析＋山登り法＋ランダムジャンプ)について、RBFカーネル・シグモイドカーネルでの実験を行ったので、その結果の説明と4つのカーネルでの比較を行う。
     - 変更点1
       - モジュールの変更：ThreadPoolExecutor → ProcessPoolExecutor\n
     ***並列タスク実行***\n
