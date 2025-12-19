@@ -7,7 +7,7 @@ import joblib
 import streamlit as st
 from joblib import Parallel, delayed
 from sklearn.svm import SVC
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, cross_val_predict
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix
@@ -123,9 +123,14 @@ def evaluate_core(weights, datas, labels, kernel, params_vec, degree, k=5, max_i
 # --- A. 重みの最適化 ---
 def optimize_weights_hc(datas, labels, kernel, current_params_vec, degree, init_weights, step_size, max_iter, k_cv, stagnate_L, jump_settings):
     n_features = len(init_weights)
-    best_weights = normalize_w(init_weights.copy())
     
-    best_score = evaluate_core(best_weights, datas, labels, kernel, current_params_vec, degree, k=k_cv)
+    # 現在地(curr)と、最高記録(global_best)を分離して初期化
+    curr_weights = normalize_w(init_weights.copy())
+    curr_score = evaluate_core(curr_weights, datas, labels, kernel, current_params_vec, degree, k=k_cv)
+    
+    global_best_weights = curr_weights.copy()
+    global_best_score = curr_score
+    
     no_improve = 0
     
     k_small, k_big = jump_settings["k_small"], jump_settings["k_big"]
@@ -135,13 +140,14 @@ def optimize_weights_hc(datas, labels, kernel, current_params_vec, degree, init_
         step_best_score = -np.inf
         step_best_weights = None
         
+        # --- 近傍探索 ---
         for idx in range(n_features):
             for delta in [-step_size, 0.0, step_size]:
                 if delta == 0.0:
-                    score = best_score
-                    trial_w = best_weights
+                    score = curr_score
+                    trial_w = curr_weights
                 else:
-                    trial_w = best_weights.copy()
+                    trial_w = curr_weights.copy()
                     trial_w[idx] += delta
                     trial_w = normalize_w(trial_w)
                     score = evaluate_core(trial_w, datas, labels, kernel, current_params_vec, degree, k=k_cv)
@@ -150,31 +156,46 @@ def optimize_weights_hc(datas, labels, kernel, current_params_vec, degree, init_
                     step_best_score = score
                     step_best_weights = trial_w
         
-        if step_best_score > best_score:
-            best_score = step_best_score
-            best_weights = step_best_weights
+        # --- 移動判定 ---
+        if step_best_score > curr_score:
+            # 改善した場合、現在地を更新
+            curr_score = step_best_score
+            curr_weights = step_best_weights
             no_improve = 0
+            
+            # もし今回の移動で「史上最高記録」を更新したら、Global Bestに保存
+            if curr_score > global_best_score:
+                global_best_score = curr_score
+                global_best_weights = curr_weights.copy()
         else:
             no_improve += 1
             
+        # --- ジャンプ処理 ---
         if no_improve >= stagnate_L:
             if no_improve >= stagnate_L * 2:
-                best_weights = partial_random_jump_w(best_weights, k_big, str_big)
+                # 停滞時、curr(現在地)は強制的に飛ばすが、global_bestは守られる
+                curr_weights = partial_random_jump_w(curr_weights, k_big, str_big)
                 no_improve = 0
             else:
-                best_weights = partial_random_jump_w(best_weights, k_small, str_small)
+                curr_weights = partial_random_jump_w(curr_weights, k_small, str_small)
             
-            best_score = evaluate_core(best_weights, datas, labels, kernel, current_params_vec, degree, k=k_cv)
+            # ジャンプ先のスコアを計算 (これは低くなっても良い)
+            curr_score = evaluate_core(curr_weights, datas, labels, kernel, current_params_vec, degree, k=k_cv)
 
-    return best_weights, best_score
+    # 【最終的に、探索中に見つけた一番良いものを返す
+    return global_best_weights, global_best_score
 
 # --- B. パラメータの最適化 (All Linear) ---
 def optimize_params_hc(datas, labels, kernel, degree, fixed_weights, init_params_vec, step_sizes_vec, max_iter, k_cv, stagnate_L, jump_settings, param_bounds_list):
-    best_params = np.array(init_params_vec, dtype=float)
-    best_score = evaluate_core(fixed_weights, datas, labels, kernel, best_params, degree, k=k_cv)
-    n_params = len(best_params)
     
-    # ★ 全て 'linear' として扱う
+    # 現在地(curr)と、最高記録(global_best)を分離して初期化
+    curr_params = np.array(init_params_vec, dtype=float)
+    curr_score = evaluate_core(fixed_weights, datas, labels, kernel, curr_params, degree, k=k_cv)
+    
+    global_best_params = curr_params.copy()
+    global_best_score = curr_score
+    
+    n_params = len(curr_params)
     param_types = ['linear'] * n_params
         
     no_improve = 0
@@ -184,24 +205,24 @@ def optimize_params_hc(datas, labels, kernel, degree, fixed_weights, init_params
         step_best_score = -np.inf
         step_best_params = None
         
+        # --- 近傍探索 ---
         for idx in range(n_params):
-            current_val = best_params[idx]
+            current_val = curr_params[idx]
             step = step_sizes_vec[idx]
             
-            # 3方向候補 (全て加減算)
             cands = [current_val - step, current_val, current_val + step]
             
             for val in cands:
                 if val == current_val:
-                    score = best_score
-                    trial_p = best_params
+                    score = curr_score
+                    trial_p = curr_params
                 else:
                     # ガード処理
                     min_v, max_v = param_bounds_list[idx]
                     val = max(val, min_v)
                     val = min(val, max_v)
                     
-                    trial_p = best_params.copy()
+                    trial_p = curr_params.copy()
                     trial_p[idx] = val
                     score = evaluate_core(fixed_weights, datas, labels, kernel, trial_p, degree, k=k_cv)
                 
@@ -209,24 +230,32 @@ def optimize_params_hc(datas, labels, kernel, degree, fixed_weights, init_params
                     step_best_score = score
                     step_best_params = trial_p
         
-        if step_best_score > best_score:
-            best_score = step_best_score
-            best_params = step_best_params
+        # --- 移動判定 ---
+        if step_best_score > curr_score:
+            curr_score = step_best_score
+            curr_params = step_best_params
             no_improve = 0
+            
+            # 史上最高記録を更新したら保存
+            if curr_score > global_best_score:
+                global_best_score = curr_score
+                global_best_params = curr_params.copy()
         else:
             no_improve += 1
             
-        # ジャンプ処理 (範囲ベース)
+        # --- ジャンプ処理 ---
         if no_improve >= stagnate_L:
             if no_improve >= stagnate_L * 2:
-                best_params = random_jump_params_bounded(best_params, param_types, param_bounds_list, pct_big)
+                # 現在地のみジャンプ
+                curr_params = random_jump_params_bounded(curr_params, param_types, param_bounds_list, pct_big)
                 no_improve = 0
             else:
-                best_params = random_jump_params_bounded(best_params, param_types, param_bounds_list, pct_small)
+                curr_params = random_jump_params_bounded(curr_params, param_types, param_bounds_list, pct_small)
             
-            best_score = evaluate_core(fixed_weights, datas, labels, kernel, best_params, degree, k=k_cv)
+            curr_score = evaluate_core(fixed_weights, datas, labels, kernel, curr_params, degree, k=k_cv)
             
-    return best_params, best_score
+    # 探索中に見つけた一番良いものを返す
+    return global_best_params, global_best_score
 
 # --- 並列実行用ラッパー ---
 def run_params_search_wrapper(datas, labels, kernel, degree, fixed_weights, init_vec, step_vec, max_iter, k_cv, stagnate_L, jump_settings, bounds_list):

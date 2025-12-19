@@ -101,7 +101,7 @@ elif home_type == "学術講演会":
         st.image(img, use_container_width=True)
 
     with tab2:
-        st.pdf("picture/学術講演会原稿_完成_岩崎翔太.pdf", height=600)
+        st.pdf("picture/学術講演会原稿_完成_岩崎翔太.pdf")
 
 
 
