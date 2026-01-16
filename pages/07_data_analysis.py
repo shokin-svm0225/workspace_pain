@@ -19,6 +19,7 @@ from streamlit_option_menu import option_menu
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from scipy.spatial.distance import cdist
 
 def show_pca_analysis(df, start_col='P1', end_col='D13', pain_col=None):
     # --- 列指定確認 ---
@@ -111,7 +112,7 @@ options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-
 options_1 = ['標準化','相関係数']
 
 # ラジオボタンを表示
-home_type = st.sidebar.radio("選んでください", ["データ分布", "データ変換", "主成分分析"])
+home_type = st.sidebar.radio("選んでください", ["データ分布", "データ変換", "主成分分析", "内積・ユーグリッド距離"])
 
 # ファイル読み込みと処理
 if home_type == "データ分布":
@@ -315,6 +316,177 @@ if home_type == "主成分分析":
     elif choice == "欠損値削除(BS-POP)":
         df = pd.read_csv("data/null/BSPOP/questionnaire_bspop_missing.csv")
         show_pca_analysis(df, start_col='D1', end_col='D18', pain_col=None)
+
+if home_type == "内積・ユーグリッド距離":
+    st.header("データ間距離・内積計算")
+
+    df = pd.read_csv("data/null/fusion/questionnaire_fusion_missing.csv")
+
+    st.subheader("1. データのプレビュー")
+    st.dataframe(df.head())
+
+    # 2. 計算に使用するカラムの選択
+    st.subheader("2. 設定")
+    column_option = st.radio(
+        "計算対象のカラム範囲",
+        ('P1-P13', 'D1-D18', 'P1-D18'),
+        horizontal=True
+    )
+
+    do_standardization = st.checkbox("データを標準化する（平均0, 分散1）", value=True)
+    
+    # 選択肢に基づいてカラムリストを生成
+    cols_p = [f'P{i}' for i in range(1, 14)]
+    cols_d = [f'D{i}' for i in range(1, 19)]
+
+    if column_option == 'P1-P13':
+        target_cols = cols_p
+    elif column_option == 'D1-D18':
+        target_cols = cols_d
+    else: # P1-D18
+        target_cols = cols_p + cols_d
+        
+    # データフレームに存在するカラムのみを抽出
+    valid_cols = [c for c in target_cols if c in df.columns]
+
+    # ---------------------------------------------------------
+    # 前処理：標準化 (Standardization)
+    # ---------------------------------------------------------
+
+    # 数値データの抽出
+    df_numeric = df[valid_cols].copy()
+
+    # 標準化の実行（選択された場合のみ）
+    if do_standardization:
+        # (x - mean) / std
+        df_calc = (df_numeric - df_numeric.mean()) / df_numeric.std()
+        st.info("✅ データは標準化されています。")
+        st.dataframe(df_calc.head())
+    else:
+        df_calc = df_numeric
+        st.info("ℹ️ 元のデータをそのまま使用（標準化なし）")
+
+    # 痛みの種類をクリーニングする関数
+    def classify_pain(pain_type):
+        if pain_type == '侵害受容性疼痛':
+            return '侵害受容性疼痛'
+        elif pain_type == '神経障害性疼痛':
+            return '神経障害性疼痛'
+        else:
+            return '不明' # それ以外（複合的なものや空白など）はすべて不明
+
+    # 新しい「グループ」列を作成
+    df_calc['グループ'] = df['痛みの種類'].apply(classify_pain)
+    
+    # グループごとの件数を表示
+    st.write("**疼痛の種類ごとのデータ数:**")
+    st.write(df_calc['グループ'].value_counts())
+
+    # ---------------------------------------------------------
+    # グループ分け
+    # ---------------------------------------------------------
+    groups = {
+        "侵害受容性疼痛": df_calc[df_calc['グループ'] == '侵害受容性疼痛'],
+        "神経障害性疼痛": df_calc[df_calc['グループ'] == '神経障害性疼痛'],
+        "不明": df_calc[df_calc['グループ'] == '不明']
+    }
+
+    # 計算する組み合わせ
+    combinations = [
+        ("侵害受容性疼痛同士", "侵害受容性疼痛", "侵害受容性疼痛"),
+        ("神経障害性疼痛同士", "神経障害性疼痛", "神経障害性疼痛"),
+        ("不明同士", "不明", "不明"),
+        ("侵害受容性疼痛＋神経障害性疼痛", "侵害受容性疼痛", "神経障害性疼痛"),
+        ("侵害受容性疼痛＋不明", "侵害受容性疼痛", "不明"),
+        ("神経障害性疼痛＋不明", "神経障害性疼痛", "不明")
+    ]
+
+    # ---------------------------------------------------------
+    # 計算実行
+    # ---------------------------------------------------------
+    results = []
+
+    for label, group1_name, group2_name in combinations:
+        df1 = groups[group1_name]
+        df2 = groups[group2_name]
+        
+        # データがない場合はスキップ
+        if df1.empty or df2.empty:
+            results.append({
+                "組み合わせ": label,
+                "内積（平均）": None,
+                "平均（ユークリッド距離2乗）": None,
+                "データ数": "データ不足"
+            })
+            continue
+        
+    # 数値行列を取得 ('グループ'列を除外)
+        mat1 = df1.drop(columns=['グループ']).values
+        mat2 = df2.drop(columns=['グループ']).values
+        
+        # 1. 全通りの内積 (Dot Product)
+        dot_matrix = np.dot(mat1, mat2.T)
+        
+        # 2. 全通りのユークリッド距離の2乗
+        dist_matrix = cdist(mat1, mat2, metric='sqeuclidean')
+        
+        # --- 平均値の計算（対角成分の除外処理）---
+        
+        if group1_name == group2_name:
+            # 同一グループの場合：対角成分（自分自身とのペア）を除外する
+            n = mat1.shape[0]
+            if n <= 1:
+                # データが1つしかない場合はペアを作れないため計算不可
+                mean_dot = None
+                mean_dist = None
+            else:
+                # 合計から対角成分(trace)を引き、個数(N*N - N)で割る
+                
+                # 内積
+                sum_dot = np.sum(dot_matrix) - np.trace(dot_matrix)
+                mean_dot = sum_dot / (n * (n - 1))
+                
+                # 距離
+                sum_dist = np.sum(dist_matrix) - np.trace(dist_matrix)
+                mean_dist = sum_dist / (n * (n - 1))
+        else:
+            # 異なるグループの場合：全要素を使用
+            mean_dot = np.mean(dot_matrix)
+            mean_dist = np.mean(dist_matrix)
+        
+        # データ数の表示文字列作成
+        if group1_name == group2_name:
+            count_str = f"{len(df1)} (ペア数: {len(df1)*(len(df1)-1)})"
+        else:
+            count_str = f"{len(df1)} x {len(df2)}"
+        
+        results.append({
+            "組み合わせ": label,
+            "内積（平均）": mean_dot,
+            "平均（ユークリッド距離2乗）": mean_dist,
+            "データ数": count_str
+        })
+
+    # ---------------------------------------------------------
+    # 結果表示
+    # ---------------------------------------------------------
+    st.divider()
+    st.subheader("3. 計算結果")
+    st.caption("各組み合わせに対して全データペアについて内積を計算し、その平均値を表示")
+    st.caption("ユークリッド距離はカーネル関数の数式 $\sum (x-y)^2$ を計算、その平均値を表示")
+    st.caption("※同一疼痛同士の比較では、自分自身とのペアを除外して平均を計算する")
+    st.caption("※「不明」には、「侵害受容性疼痛」「神経障害性疼痛」以外のすべてのデータを含む")
+
+    results_df = pd.DataFrame(results)
+    
+    # 表の表示（小数点以下4桁でフォーマット）
+    st.dataframe(
+        results_df.style.format({
+            "平均 内積": "{:.4f}",
+            "平均 ユークリッド距離(2乗)": "{:.4f}"
+        }),
+        use_container_width=True
+    )
 
 
 def show():
