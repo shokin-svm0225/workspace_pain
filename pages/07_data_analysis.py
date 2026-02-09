@@ -112,7 +112,7 @@ options = ['欠損値データ削除', '中央値補完', '平均値補完', 'k-
 options_1 = ['標準化','相関係数']
 
 # ラジオボタンを表示
-home_type = st.sidebar.radio("選んでください", ["データ分布", "データ変換", "主成分分析", "内積・ユーグリッド距離"])
+home_type = st.sidebar.radio("選んでください", ["データ分布", "データ変換", "主成分分析", "内積・ユーグリッド距離", "内積・ユーグリッド距離（PCA）"])
 
 # ファイル読み込みと処理
 if home_type == "データ分布":
@@ -410,17 +410,17 @@ if home_type == "内積・ユーグリッド距離":
         df1 = groups[group1_name]
         df2 = groups[group2_name]
         
-        # データがない場合はスキップ
         if df1.empty or df2.empty:
             results.append({
                 "組み合わせ": label,
                 "内積（平均）": None,
+                "内積（標準偏差）": None,
                 "平均（ユークリッド距離2乗）": None,
+                "距離2乗（標準偏差）": None,
                 "データ数": "データ不足"
             })
             continue
         
-    # 数値行列を取得 ('グループ'列を除外)
         mat1 = df1.drop(columns=['グループ']).values
         mat2 = df2.drop(columns=['グループ']).values
         
@@ -430,29 +430,33 @@ if home_type == "内積・ユーグリッド距離":
         # 2. 全通りのユークリッド距離の2乗
         dist_matrix = cdist(mat1, mat2, metric='sqeuclidean')
         
-        # --- 平均値の計算（対角成分の除外処理）---
+        # --- 平均値・標準偏差の計算 ---
         
         if group1_name == group2_name:
-            # 同一グループの場合：対角成分（自分自身とのペア）を除外する
+            # 同一グループの場合：対角成分（自分自身とのペア）を除外
             n = mat1.shape[0]
             if n <= 1:
-                # データが1つしかない場合はペアを作れないため計算不可
-                mean_dot = None
-                mean_dist = None
+                mean_dot, sd_dot = None, None
+                mean_dist, sd_dist = None, None
             else:
-                # 合計から対角成分(trace)を引き、個数(N*N - N)で割る
+                # 対角成分以外を抽出するためのマスクを作成
+                mask = ~np.eye(n, dtype=bool)
                 
-                # 内積
-                sum_dot = np.sum(dot_matrix) - np.trace(dot_matrix)
-                mean_dot = sum_dot / (n * (n - 1))
+                # 内積の統計
+                flat_dot = dot_matrix[mask]
+                mean_dot = np.mean(flat_dot)
+                sd_dot = np.std(flat_dot)
                 
-                # 距離
-                sum_dist = np.sum(dist_matrix) - np.trace(dist_matrix)
-                mean_dist = sum_dist / (n * (n - 1))
+                # 距離の統計
+                flat_dist = dist_matrix[mask]
+                mean_dist = np.mean(flat_dist)
+                sd_dist = np.std(flat_dist)
         else:
             # 異なるグループの場合：全要素を使用
             mean_dot = np.mean(dot_matrix)
+            sd_dot = np.std(dot_matrix)
             mean_dist = np.mean(dist_matrix)
+            sd_dist = np.std(dist_matrix)
         
         # データ数の表示文字列作成
         if group1_name == group2_name:
@@ -463,7 +467,9 @@ if home_type == "内積・ユーグリッド距離":
         results.append({
             "組み合わせ": label,
             "内積（平均）": mean_dot,
+            "内積（標準偏差）": sd_dot,
             "平均（ユークリッド距離2乗）": mean_dist,
+            "距離2乗（標準偏差）": sd_dist,
             "データ数": count_str
         })
 
@@ -482,11 +488,225 @@ if home_type == "内積・ユーグリッド距離":
     # 表の表示（小数点以下4桁でフォーマット）
     st.dataframe(
         results_df.style.format({
-            "平均 内積": "{:.4f}",
-            "平均 ユークリッド距離(2乗)": "{:.4f}"
+            "内積（平均）": "{:.4f}",
+            "内積（標準偏差）": "{:.4f}",
+            "平均（ユークリッド距離2乗）": "{:.4f}",
+            "距離2乗（標準偏差）": "{:.4f}"
         }),
         use_container_width=True
     )
+
+if home_type == "内積・ユーグリッド距離（PCA）":
+    st.header("データ間距離・内積計算（PCA版）")
+
+    df = pd.read_csv("data/null/fusion/questionnaire_fusion_missing.csv")
+
+    st.subheader("1. データのプレビュー")
+    st.dataframe(df.head())
+
+    # 2. PCAに使用する元のカラムの選択
+    st.subheader("2. PCAの設定")
+    column_option = st.radio(
+        "PCAの対象とするカラム範囲",
+        ('P1-P13', 'D1-D18', 'P1-D18'),
+        horizontal=True
+    )
+
+    # 選択肢に基づいてカラムリストを生成
+    cols_p = [f'P{i}' for i in range(1, 14)]
+    cols_d = [f'D{i}' for i in range(1, 19)]
+
+    if column_option == 'P1-P13':
+        target_cols = cols_p
+    elif column_option == 'D1-D18':
+        target_cols = cols_d
+    else: # P1-D18
+        target_cols = cols_p + cols_d
+        
+    # データフレームに存在するカラムのみを抽出
+    valid_cols = [c for c in target_cols if c in df.columns]
+
+    # ---------------------------------------------------------
+    # 前処理：標準化 (Standardization) - 必須
+    # ---------------------------------------------------------
+    df_numeric = df[valid_cols].copy()
+
+    # 欠損値がある場合は平均値で補完（PCA実行のため）
+    if df_numeric.isnull().values.any():
+        st.warning("⚠️ 欠損値が含まれています。各項目の平均値で補完して計算します。")
+        df_numeric = df_numeric.fillna(df_numeric.mean())
+
+    # 標準化 (x - mean) / std
+    df_standardized = (df_numeric - df_numeric.mean()) / df_numeric.std()
+    st.info("✅ データを標準化しました（平均0, 分散1）。")
+
+    # ---------------------------------------------------------
+    # 主成分分析 (PCA) の実行
+    # ---------------------------------------------------------
+    pca = PCA()
+    pca_scores = pca.fit_transform(df_standardized)
+
+    # PCA結果のデータフレーム作成
+    pc_cols = [f'PC{i+1}' for i in range(pca_scores.shape[1])]
+    df_pca = pd.DataFrame(pca_scores, columns=pc_cols, index=df.index)
+
+    # 寄与率の表示
+    exp_var_ratio = pca.explained_variance_ratio_
+    cum_var_ratio = np.cumsum(exp_var_ratio)
+
+    st.write("**PCA結果（主成分得点）:**")
+    st.dataframe(df_pca.head())
+
+    # 寄与率のサマリー
+    st.write(f"主成分の数: {len(pc_cols)}")
+    st.caption(f"累積寄与率 (PC1-PC3): {cum_var_ratio[min(2, len(cum_var_ratio)-1)]:.2%}")
+
+    # ---------------------------------------------------------
+    # 計算に使用する主成分の範囲選択
+    # ---------------------------------------------------------
+    st.subheader("3. 計算対象の主成分選択")
+    pc_range = st.select_slider(
+        "計算に使用する主成分の範囲を選択してください",
+        options=pc_cols,
+        value=('PC1', pc_cols[min(4, len(pc_cols)-1)]) # デフォルトでPC1〜PC5（または最大）
+    )
+
+    # 選択された範囲のPCを抽出
+    start_idx = pc_cols.index(pc_range[0])
+    end_idx = pc_cols.index(pc_range[1])
+    selected_pc_cols = pc_cols[start_idx : end_idx + 1]
+
+    st.success(f"以下の主成分を使用して計算を行います: {', '.join(selected_pc_cols)}")
+
+    # 計算用のデータフレーム
+    df_calc = df_pca[selected_pc_cols].copy()
+
+    # 痛みの種類をクリーニングする関数
+    def classify_pain(pain_type):
+        if pain_type == '侵害受容性疼痛':
+            return '侵害受容性疼痛'
+        elif pain_type == '神経障害性疼痛':
+            return '神経障害性疼痛'
+        else:
+            return '不明'
+
+    # 新しい「グループ」列を作成
+    df_calc['グループ'] = df['痛みの種類'].apply(classify_pain)
+
+    # グループごとの件数を表示
+    st.write("**疼痛の種類ごとのデータ数:**")
+    st.write(df_calc['グループ'].value_counts())
+
+    # ---------------------------------------------------------
+    # グループ分けと計算
+    # ---------------------------------------------------------
+    groups = {
+        "侵害受容性疼痛": df_calc[df_calc['グループ'] == '侵害受容性疼痛'],
+        "神経障害性疼痛": df_calc[df_calc['グループ'] == '神経障害性疼痛'],
+        "不明": df_calc[df_calc['グループ'] == '不明']
+    }
+
+    combinations = [
+        ("侵害受容性疼痛同士", "侵害受容性疼痛", "侵害受容性疼痛"),
+        ("神経障害性疼痛同士", "神経障害性疼痛", "神経障害性疼痛"),
+        ("不明同士", "不明", "不明"),
+        ("侵害受容性疼痛＋神経障害性疼痛", "侵害受容性疼痛", "神経障害性疼痛"),
+        ("侵害受容性疼痛＋不明", "侵害受容性疼痛", "不明"),
+        ("神経障害性疼痛＋不明", "神経障害性疼痛", "不明")
+    ]
+
+    # ---------------------------------------------------------
+    # 計算実行
+    # ---------------------------------------------------------
+    results = []
+
+    for label, group1_name, group2_name in combinations:
+        df1 = groups[group1_name]
+        df2 = groups[group2_name]
+        
+        if df1.empty or df2.empty:
+            results.append({
+                "組み合わせ": label,
+                "内積（平均）": None,
+                "内積（標準偏差）": None,
+                "平均（ユークリッド距離2乗）": None,
+                "距離2乗（標準偏差）": None,
+                "データ数": "データ不足"
+            })
+            continue
+        
+        mat1 = df1.drop(columns=['グループ']).values
+        mat2 = df2.drop(columns=['グループ']).values
+        
+        # 1. 全通りの内積 (Dot Product)
+        dot_matrix = np.dot(mat1, mat2.T)
+        
+        # 2. 全通りのユークリッド距離の2乗
+        dist_matrix = cdist(mat1, mat2, metric='sqeuclidean')
+        
+        # --- 平均値・標準偏差の計算 ---
+        
+        if group1_name == group2_name:
+            # 同一グループの場合：対角成分（自分自身とのペア）を除外
+            n = mat1.shape[0]
+            if n <= 1:
+                mean_dot, sd_dot = None, None
+                mean_dist, sd_dist = None, None
+            else:
+                # 対角成分以外を抽出するためのマスクを作成
+                mask = ~np.eye(n, dtype=bool)
+                
+                # 内積の統計
+                flat_dot = dot_matrix[mask]
+                mean_dot = np.mean(flat_dot)
+                sd_dot = np.std(flat_dot)
+                
+                # 距離の統計
+                flat_dist = dist_matrix[mask]
+                mean_dist = np.mean(flat_dist)
+                sd_dist = np.std(flat_dist)
+        else:
+            # 異なるグループの場合：全要素を使用
+            mean_dot = np.mean(dot_matrix)
+            sd_dot = np.std(dot_matrix)
+            mean_dist = np.mean(dist_matrix)
+            sd_dist = np.std(dist_matrix)
+        
+        # データ数の表示文字列作成
+        if group1_name == group2_name:
+            count_str = f"{len(df1)} (ペア数: {len(df1)*(len(df1)-1)})"
+        else:
+            count_str = f"{len(df1)} x {len(df2)}"
+        
+        results.append({
+            "組み合わせ": label,
+            "内積（平均）": mean_dot,
+            "内積（標準偏差）": sd_dot,
+            "平均（ユークリッド距離2乗）": mean_dist,
+            "距離2乗（標準偏差）": sd_dist,
+            "データ数": count_str
+        })
+
+    # ---------------------------------------------------------
+    # 結果表示
+    # ---------------------------------------------------------
+    st.divider()
+    st.subheader("4. 計算結果")
+    st.caption(f"選択された主成分（{pc_range[0]}〜{pc_range[1]}）に基づき計算")
+
+    results_df = pd.DataFrame(results)
+    
+    # 表の表示（小数点以下4桁でフォーマット）
+    st.dataframe(
+        results_df.style.format({
+            "内積（平均）": "{:.4f}",
+            "内積（標準偏差）": "{:.4f}",
+            "平均（ユークリッド距離2乗）": "{:.4f}",
+            "距離2乗（標準偏差）": "{:.4f}"
+        }),
+        use_container_width=True
+    )
+
 
 
 def show():

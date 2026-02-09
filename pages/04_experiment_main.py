@@ -26,5 +26,5 @@ elif howto == "山登り法" and choice == "有"and choice_1 == "有":
     module = import_module("experiment.shift_pca_random_experiment") 
     module.run_shift_pca_experiment()
 elif howto == "山登り法" and choice == "無"and choice_1 == "有":
-    module = import_module("experiment.shift_pca_random_experiment")  # ✅ ドット記法
+    module = import_module("experiment.shift_random_experiment")  # ✅ ドット記法
     module.run_shift_experiment()

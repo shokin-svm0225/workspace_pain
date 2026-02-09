@@ -91,49 +91,22 @@ with st.container(border=True):
       FUSIONは、内積のおよそ平均で0.5とすると、tanh（1,-1）を基準で、[gamma：-2〜2]、gammaで抑えられるので[coef0：0]、大きく変化するのを防ぐため[degree：2,3]\n
     - 主成分分析した後のデータに対して行列計算（内積・ユーグリッド距離）を自身で行うことで、カーネル関数における最適なハイパーパラメータの候補を調べる必要がある。
     """)
-    # タブの作成
-    tab1, tab2 = st.tabs(["標準化あり", "標準化なし"])
-    # 各タブに内容を追加
-    with tab1:
-      st.markdown("- PainDITECT")
-      csv_file_path_1 = 'picture/20260116/標準化有_painditect.csv'  # ファイルパスを指定
-      df1 = pd.read_csv(csv_file_path_1)
-      st.dataframe(df1)
-      st.markdown("- BS-POP")
-      csv_file_path_2 = 'picture/20260116/標準化有_bspop.csv'  # ファイルパスを指定
-      df2 = pd.read_csv(csv_file_path_2)
-      st.dataframe(df2)
-      st.markdown("- FUSION")
-      csv_file_path_3 = 'picture/20260116/標準化有_fusion.csv'  # ファイルパスを指定
-      df3 = pd.read_csv(csv_file_path_3)
-      st.dataframe(df3)
-
-    with tab2:
-      st.markdown("- PainDITECT")
-      csv_file_path_1 = 'picture/20260116/標準化無_painditect.csv'  # ファイルパスを指定
-      df1 = pd.read_csv(csv_file_path_1)
-      st.dataframe(df1)
-      st.markdown("- BS-POP")
-      csv_file_path_2 = 'picture/20260116/標準化無_bspop.csv'  # ファイルパスを指定
-      df2 = pd.read_csv(csv_file_path_2)
-      st.dataframe(df2)
-      st.markdown("- FUSION")
-      csv_file_path_3 = 'picture/20260116/標準化無_fusion.csv'  # ファイルパスを指定
-      df3 = pd.read_csv(csv_file_path_3)
-      st.dataframe(df3)
+  
+    st.markdown("- PainDITECT")
+    csv_file_path_1 = 'picture/20260210/pca_painditect.csv'  # ファイルパスを指定
+    df1 = pd.read_csv(csv_file_path_1)
+    st.dataframe(df1)
+    st.markdown("- BS-POP")
+    csv_file_path_2 = 'picture/20260210/pca_bspop.csv'  # ファイルパスを指定
+    df2 = pd.read_csv(csv_file_path_2)
+    st.dataframe(df2)
+    st.markdown("- FUSION")
+    csv_file_path_3 = 'picture/20260210/pca_fusion.csv'  # ファイルパスを指定
+    df3 = pd.read_csv(csv_file_path_3)
+    st.dataframe(df3)
 
 with st.container(border=True):
-    st.subheader("修士論文題名の決定", divider='rainbow')
-    st.markdown("""
-    - 締切：令和8年1月19日
-    - 学術講演会のタイトル
-      - SVMを用いた整形外科における疼痛の原因診断支援
-      - Supporting Diagnosis of Pain Causes in Orthopedics Using SVM
-    - 修士論文題名はどうするか？
-    """)
-
-with st.container(border=True):
-    st.subheader("今後の予定の確認", divider='rainbow')
+    st.subheader("これからやること", divider='rainbow')
     st.markdown("""
     - 実装を行い、前回までの実験結果の比較を行う
     - 主成分分析した後のデータに対して行列計算（内積・ユーグリッド距離）を自身で行うことで、カーネル関数における最適なハイパーパラメータの候補を調べる
