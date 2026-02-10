@@ -758,7 +758,6 @@ def run_shift_pca_experiment():
 
         st.subheader("📊 スコアまとめ（降順）")
         results_df = pd.DataFrame([{
-            "step_size": r["step_size"],
             "kernel": r["kernel"],
             "gamma": r["gamma"],
             "degree": r["degree"],
@@ -767,7 +766,10 @@ def run_shift_pca_experiment():
             "score": r["score"],
             "weights": r["weights"]
         } for r in all_results])
+        results_df["score(%)"] = (results_df["score"] * 100).map(lambda x: f"{x:.2f}%")
         st.dataframe(results_df.sort_values(by="score", ascending=False))
+
+        st.write(f"✅ 最終スコア: {best_score * 100:.2f}%")
 
         st.subheader("📊 一番良かったパラメータのスコア推移")
         best_history = best_result["score_history"]

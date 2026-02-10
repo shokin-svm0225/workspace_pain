@@ -376,10 +376,25 @@ def run_shift_experiment():
 
             st.write(f"⏱ 実行時間: {time.time() - start_time:.2f} 秒")
             
-            # 結果表示（維持）
-            results_df = pd.DataFrame(all_results)
-            st.subheader("📊 スコアまとめ")
-            st.dataframe(results_df[["step_size", "kernel", "C", "score"]].sort_values("score", ascending=False))
+            # # 結果表示（維持）
+            # results_df = pd.DataFrame(all_results)
+            # st.subheader("📊 スコアまとめ")
+            # st.dataframe(results_df[["step_size", "kernel", "C", "score"]].sort_values("score", ascending=False))
+
+            st.subheader("📊 スコアまとめ（降順）")
+            results_df = pd.DataFrame([{
+                "kernel": r["kernel"],
+                "gamma": r["gamma"],
+                "degree": r["degree"],
+                "coef0": r["coef0"],
+                "C": r["C"],
+                "score": r["score"],
+                "weights": r["weights"]
+            } for r in all_results])
+            results_df["score(%)"] = (results_df["score"] * 100).map(lambda x: f"{x:.2f}%")
+            st.dataframe(results_df.sort_values(by="score", ascending=False))
+
+            st.write(f"✅ 最終スコア: {best_score * 100:.2f}%")
 
             if best_result:
                 st.subheader("📈 最良の推移")
